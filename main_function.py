@@ -74,3 +74,47 @@ def selection_menu():
         
     
     pass
+
+
+def normal_operation():
+    print("You are in Normal operation mode. Press 'M' to return to the main menu.")
+    while True:
+        action = input()
+        if action.upper() == 'M':
+            break
+
+def data_observation():
+    print("You are in Data Observation Mode. Press 'M' to return to the main menu.")
+    while True:
+        action = input()
+        if action.upper() == 'M':
+            break
+
+def maintenance():
+    print("You are in Maintenance Mode. Press 'M' to return to the main menu.")
+    while True:
+        action = input()
+        if action.upper() == 'M':
+            break
+
+while True:
+    print("Main Menu")
+    print("1. Normal Operation Mode")
+    print("2. Data Observation Mode")
+    print("3. Maintenance Mode")
+    print("4. Exit")
+
+    choice = input("Enter your choice: ")
+
+    if choice == '1':
+        normal_operation()
+    elif choice == '2':
+        data_observation()
+    elif choice == '3':
+        maintenance()
+    elif choice == '4':
+        print("Exiting the program...")
+        break
+    else:
+        print("Invalid choice. Please select a valid option.")
+
