@@ -15,6 +15,11 @@ def main():
           #      graph_data()
     except KeyboardInterrupt:
         selection_menu()
+def main():
+    try:
+        selection_menu() # Call the selection menu
+
+        
         
 
 
