@@ -18,7 +18,7 @@ results = []
 def main():
     try: 
         while True:
-            start_time = time.time()
+            start_time = time.time() # Shouldnt this all be in a new function like data record as the main loop is what determines what is done
             ultrasonic_ping()
             end_time = time.time()
             run_time = end_time-start_time
