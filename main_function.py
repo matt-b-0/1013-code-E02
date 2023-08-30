@@ -1,8 +1,15 @@
 #main function file 
 import time 
+import random
 results = []
 pin = '1234'
 pin_can_try = True
+"""
+I couldnt keep up but need to rename functions and variables to maintain 1013 stoopid ass standards 
+MAY NEED TO REPLACE FUNCTION CALLS WITH A RETURN INFORNT OF THEM
+THIS MAY IMPACT THE WAY SCRIPT WORKS
+WILL HAVE TO DO MORE TESTING FIRST
+"""
 """
  
          )                                   
@@ -31,32 +38,39 @@ def check(value, callback):
 def perform_calc(value):
     value = value * 10
     volume.append(round(value, 2))
+    #will need to import numpy for pi value np.pi
+    #volume will be 2*np.pi*r*height
 
 # Main function file
-import time
-import random
+
 
 distances = 0
 volume = []
 totalTime = []
 
 def polling_loop():
-    try:
-        while True:
-            startTime = time.time()
-            distances = random.random()  # replace random.random() with the ultrasonic ping readings
-            check(distances, perform_calc)  # callback function- To do something with the input
-            print(volume)
-            time.sleep(2)
-            endTime = time.time()
-            runTime = endTime - startTime
-            totalTime.append(runTime)
-            
-            print(f'runtime = {runTime}')
+    global results
+    """
+    need to understand if everythin is called from the polling loop or if it just used to gether data.
+    """
 
-    except KeyboardInterrupt:
-        print("Polling loop ending.")
+    startTime = time.time()
+    print("ultrasonic ping and detection")  # replace random.random() with the ultrasonic ping readings
+    print("calculating the current volume")#check(distances, perform_calc)  # callback function- To do something with the input
+    print("print(volume)")#print(volume)
+    print("reactions") #function that will turn on lights and fand/ stop them depending on current volume.
+    time.sleep(2)
+    print('results.append(volume)')
+    endTime = time.time()
+    runTime = endTime - startTime
+    totalTime.append(runTime)
+    
+    print(f'runtime = {runTime}')
 
+def reactions():
+    """
+    This will be thefunction that will control both the LED warning lights and the fans for the tank
+    """
        
 
 
@@ -72,12 +86,13 @@ def ultrasonic_ping():
     pass
 
 def graph_data():
+    global results
     """
     this function will graph the data 
     from the previous 20 data points of volume data
     """
-    #x = results[-20:0]
-    #y = 
+    #x = [0:21] 21 not included
+    #y = results[-21,0,1] not including 0. last 20 results
     pass
 
 def main_menu():
@@ -97,11 +112,13 @@ def main_menu():
                 # Call the maintenance function
                 maintenance()
             elif user_choice == '2':
-                print("analysis mode")
+                print("Data Analysis mode")
                 # Call analysis function
+                data_observation()
             elif user_choice == '3':
                 print("normal operation")
                 # Call normal operation function
+                normal_operation()
             else:
                 print("invalid input")
     except KeyboardInterrupt:
@@ -114,24 +131,29 @@ def main_menu():
 #MAIN MENU (ALL THE MODES DEFINED)
 def normal_operation():
     global results
-    print("You are in Normal operation mode. Press Enter to return to the main menu.")
-    print("In progress")
-    while True:
-        action = input()
-        if not action:  
-            confirm = input("Are you sure you want to return to the main menu? (Y/N): ")
-            if confirm.upper() == 'Y':
-                break
+    print("====================================\nYou have entered Normal Operation Mode.\n====================================\ninput (ctrl + c) to return to the main menu\n====================================")
+    try:
+        while True:
+            polling_loop()
+    except KeyboardInterrupt:
+        main_menu()
 
 def data_observation():
-    print("You are in Data Observation Mode. Press Enter to return to the main menu.")
-    print("In progress")
-    while True:
-        action = input()
-        if not action:  
-            confirm = input("Are you sure you want to return to the main menu? (Y/N): ")
-            if confirm.upper() == 'Y':
-                break
+    global results
+    print("====================================\nYou have entered Data Observation Mode.\n====================================\ninput (ctrl + c) to return to the main menu====================================")
+    if len(results) >=20:
+        graph_data()
+        #need to delete the other sections of the list
+    try:
+        while True:
+            polling_loop()
+            if len(results) % 20 == 0:
+                graph_data()
+            #other result printing
+
+    except KeyboardInterrupt:
+        main_menu()
+    
 
 def maintenance():
     global pin, pin_can_try
