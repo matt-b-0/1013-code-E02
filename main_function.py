@@ -9,6 +9,10 @@ I couldnt keep up but need to rename functions and variables to maintain 1013 st
 MAY NEED TO REPLACE FUNCTION CALLS WITH A RETURN INFORNT OF THEM
 THIS MAY IMPACT THE WAY SCRIPT WORKS
 WILL HAVE TO DO MORE TESTING FIRST
+
+Current to do list:
+Implement the adjustments function: changes specs of tank manually
+implement reactions: allows for fans and LED to turn on.
 """
 """
  
