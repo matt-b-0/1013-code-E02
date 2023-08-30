@@ -1,6 +1,8 @@
 #main function file 
 import time 
 results = []
+pin = '1234'
+pin_can_try = True
 """
  
          )                                   
@@ -15,22 +17,8 @@ results = []
 
 """
                                
-def main():
-    try: 
-        while True:
-            start_time = time.time() # Shouldnt this all be in a new function like data record as the main loop is what determines what is done
-            ultrasonic_ping()
-            end_time = time.time()
-            run_time = end_time-start_time
-            print(f'runtime = {run_time}')
-            time.sleep(2)
-          #  if len(results)%20 ==0: - This shouldnt be here
-          #      graph_data()
-    except KeyboardInterrupt:
-        selection_menu()
-def main():
-    try:
-        selection_menu() # Call the selection menu
+
+
 
 #HERE:---->        
 # Define the condition function
@@ -69,8 +57,6 @@ def polling_loop():
     except KeyboardInterrupt:
         print("Polling loop ending.")
 
-
-polling_loop()
        
 
 
@@ -94,40 +80,40 @@ def graph_data():
     #y = 
     pass
 
-def selection_menu():
+def main_menu():
     """
     This will be the main menu for tank operation
     it will be the initial call for the file.
     everythin is run off this function.
     """
-    #try:
-        #print('select a mode of operation\n')
-        #need to add options
-        #input("")
-    #except KeyboardInterrupt:
-        #exit(0)
+    
     print("Choose a mode of operation")
-    valid = [Maintenance, Analysis, Normal]
-        try:
-            user_choice = input("1: Maintenance. 2. Analysis. 3. Normal:\n")
-            if user_choice.upper() not in valid:
-                return ValueError
-            elif user_choice.upper() == Maintenance:
+    try:
+        print("====================================\nWelcome to the water tank system main menu.\n====================================\nOptions for menus are listed below\n(1): Maintenance \n(2). Analysis. \n(3). Normal:\n(ctr+c) Exit program\n====================================")
+        while True:
+            user_choice = input("please select an option from above by entering a number: ")
+            if user_choice == '1':
                 print("maintenance mode")
                 # Call the maintenance function
-            elif user_choice.upper() == Analysis:
+                maintenance()
+            elif user_choice == '2':
                 print("analysis mode")
                 # Call analysis function
-            elif user_choice.upper() == Normal:
+            elif user_choice == '3':
                 print("normal operation")
                 # Call normal operation function
-   pass
+            else:
+                print("invalid input")
+    except KeyboardInterrupt:
+        exit(0)
+
 
 
 
 #HERE:--->
 #MAIN MENU (ALL THE MODES DEFINED)
 def normal_operation():
+    global results
     print("You are in Normal operation mode. Press Enter to return to the main menu.")
     print("In progress")
     while True:
@@ -148,35 +134,44 @@ def data_observation():
                 break
 
 def maintenance():
-    print("You are in Maintenance Mode. Press Enter to return to the main menu.")
-    print("In progress")
-    while True:
-        action = input()
-        if not action: 
-            confirm = input("Are you sure you want to return to the main menu? (Y/N): ")
-            if confirm.upper() == 'Y':
-                break
+    global pin, pin_can_try
+    attempts = 5
+    if pin_can_try:
+        try:
+            while attempts>0:
+                print(f'====================================\nYou have entered maintaience mode.\n====================================\nPlease enter the correct {len(pin)} digit pin to make adjustments\nYou have {attempts} attempts left.\nenter (ctrl + c) to return to main menu\n====================================')
+                #may have to change if we want to make a numeric key, i have it as a string at the top
+                attempt = input('enter pin: ')
+                if attempt == pin:
+                    adjustments()
+                else:
+                    print("That was incorrect")
+                    attempts-=1
 
-def main_menu():
-    while True:
-        print("Main Menu")
-        print("1. Normal Operation Mode")
-        print("2. Data Observation Mode")
-        print("3. Maintenance Mode")
-        print("4. Exit")
+            print("You have been locked out of the maintainence system you will be returned to the main menu in 5 seconds:")
+            pin_can_try = False
+            for _ in range(5,0,-1):
+                print(_)
+                time.sleep(1)
+            main_menu()
+        except KeyboardInterrupt:
+            main_menu()
 
-        choice = input("Enter your choice: ")
+    else:
+        print("You have been locked out of the maintainence system you will be returned to the main menu in 5 seconds:")
+        for _ in range(5,0,-1):
+            print(_)
+            time.sleep(1)
+        main_menu()
 
-        if choice == '1':
-            normal_operation()
-        elif choice == '2':
-            data_observation()
-        elif choice == '3':
-            maintenance()
-        elif choice == '4':
-            print("Exiting the program...")
-            break
-        else:
-            print("Invalid choice. Please select a valid option.")
+def adjustments():
+    """
+    this function will allow the user to make adjustmnts to variables that can be changed.
+    this function will go through each changable option
+    It HAS TO RETURN TO THE MAIN MENU
+    or it will stuff up code above
+    """
+    pass
+
 
 main_menu()
