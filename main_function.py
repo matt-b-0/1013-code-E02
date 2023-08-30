@@ -33,6 +33,42 @@ def main():
         selection_menu() # Call the selection menu
 
         
+# Define the condition function
+def check(value, callback):
+    # The condition for checking logic
+    if value > 0:
+        callback(value)
+
+# Necessary calculation for volume and stuff function
+def perform_calc(value):
+    value = value * 10
+    x.append(round(value, 2))
+
+# Main function file
+import time
+import random
+
+results = []
+a = 0
+x = []
+
+def polling_loop():
+    try:
+        while True:
+            start_time = time.time()
+            a = random.random()  # sensor #ultrasonic_ping()
+            check(a, perform_calc)  # callback function- To do something with the input
+            print(x)
+            end_time = time.time()
+            run_time = end_time - start_time
+            time.sleep(2)
+            print(f'runtime = {run_time}')
+
+    except KeyboardInterrupt:
+        pass
+
+
+polling_loop()
         
 
 
