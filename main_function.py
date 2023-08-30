@@ -11,8 +11,8 @@ def main():
             run_time = end_time-start_time
             print(f'runtime = {run_time}')
             time.sleep(2)
-            if len(results)%20 ==0:
-                graph_data()
+          #  if len(results)%20 ==0: - This shouldnt be here
+          #      graph_data()
     except KeyboardInterrupt:
         selection_menu()
         
@@ -50,6 +50,22 @@ def selection_menu():
         #input("")
     #except KeyboardInterrupt:
         #exit(0)
-
+    print("Choose a mode of operation")
+    valid = [Maintenance, Analysis, Normal]
+        try:
+            user_choice = input("1: Maintenance. 2. Analysis. 3. Normal:\n")
+            if user_choice.upper() not in valid:
+                return ValueError
+            elif user_choice.upper() == Maintenance:
+                print("maintenance mode")
+                # Call the maintenance function
+            elif user_choice.upper() == Analysis:
+                print("analysis mode")
+                # Call analysis function
+            elif user_choice.upper() == Normal:
+                print("normal operation")
+                # Call normal operation function
+            
+        
     
     pass
