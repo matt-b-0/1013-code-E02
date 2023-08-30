@@ -1,7 +1,13 @@
 #main function file 
 import time 
 results = []
-
+"""
+  ___ _  _  ___   _  __  _ ____
+ | __| \| |/ __| / |/  \/ |__ /
+ | _|| .` | (_ | | | () | ||_ \
+ |___|_|\_|\___| |_|\__/|_|___/
+"""
+                               
 def main():
     try: 
         while True:
