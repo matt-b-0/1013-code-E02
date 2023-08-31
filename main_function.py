@@ -1,7 +1,7 @@
 #main function file 
 import time 
 import random
-import matplotlip.pyplot as plt
+import matplotlib.pyplot as plt
 results = []
 pin = '1234'
 pin_can_try = True
