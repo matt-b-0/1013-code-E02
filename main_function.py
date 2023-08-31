@@ -1,6 +1,7 @@
 #main function file 
 import time 
 import random
+import matplotlip.pyplot as plt
 results = []
 pin = '1234'
 pin_can_try = True
@@ -95,8 +96,12 @@ def graph_data():
     this function will graph the data 
     from the previous 20 data points of volume data
     """
-    #x = [0:21] 21 not included
-    #y = results[-21,0,1] not including 0. last 20 results
+    #plt.figure(1)
+    #plt.title("Volume against Time")
+    #plt.errorbar(time, data, linestyle = "--", marker = "o")
+    #plt.xlabel("Time (s)")
+    #plt.ylabel("Volume (m^3)")
+    #plt.show()
     pass
 
 def main_menu():
