@@ -6,8 +6,8 @@ from pymata4 import pymata4
 results = []
 pin = '1234'
 pin_can_try = True
-pin_lockout = 0
-max_height = 19
+pin_lockout = None
+max_height = 20
 board = pymata4.Pymata4()
 """
 I couldnt keep up but need to rename functions and variables to maintain 1013 stoopid ass standards 
@@ -34,55 +34,77 @@ implement reactions: allows for fans and LED to turn on.
 """
                                
 
-
-
-#HERE:---->        
-# Define the condition function
-def check(value, callback):
-    # The condition for checking logic
-    if value > 0:                                     
-        callback(value)
-
-# Necessary calculation for volume and stuff function REPLACE THIS WITH A CALC FUNCTION
-def perform_calc(value):
-    value = value * 10
-    volume.append(round(value, 2))
-    #will need to import numpy for pi value np.pi
-    #volume will be 2*np.pi*r*height
-
-# Main function file
-
-
-
 distances = 0
-volume = []
-totalTime = []
+height = 0
+volume_graph = []
+time_graph = []
+rate_change = []
+rate_of_change_cutoff = 100 #mL/s
+base_SA = 24*24
+time_add = True
+error_lights = [3,4,5,6]
 
 def polling_loop():
-    global results
+    global results, time_add
     """
     need to understand if everythin is called from the polling loop or if it just used to gether data.
     """
 
     startTime = time.time()
-    print("ultrasonic ping and detection")  # replace random.random() with the ultrasonic ping readings
-    print("calculating the current volume")#check(distances, perform_calc)  # callback function- To do something with the input
-    print("print(volume)")#print(volume)
-    print("reactions") #function that will turn on lights and fand/ stop them depending on current volume.
-    time.sleep(2)
-    print('results.append(volume)')
+    ultrasonic_ping() 
+    print(f"{volume}")#print(volume) mL
+    data_clean()
+
+    if time_add:
+        reactions()
+    time.sleep(1.5)
     endTime = time.time()
     runTime = endTime - startTime
-    totalTime.append(runTime)
-    
+    if time_add:
+        time_graph.append(runTime)
     print(f'runtime = {runTime}')
 
 def reactions():
     """
     This will be thefunction that will control both the LED warning lights and the fans for the tank
     """
-    pass 
+    global max_height, height, board, error_lights
+    height_dif = (max_height - height)/max_height
+
+    for pin in error_lights:
+            board.set_pin_mode_digital_output(pin)
+            board.digital_write(pin,0)
+
+    if height_dif>0.9:
+        board.digital_write(pin[0],1)
+        board.digital_pin_write(pin[1],1)
+        print("input pump on at HIGH speed")
+    elif height_dif>0.75:
+        board.digital_write(pin[0],1)
+        print("input pump on at LOW speed")
+    elif 0.1<height_dif<0.25:
+        board.digital_write(pin[2],1)
+        board.digital_pin_write(pin[3],1)
+        print("output pump on at HIGH speed")
+    elif 0<height_dif<0.1:
+        board.digital_write(pin[2],1)
+        print("output pump on at LOW speed")
+    elif height <0:
+        print(f"volume is at max level\nmax volume is {max_height*base_SA} mL")
+
+        
        
+def data_clean():
+    global volume, volume_graph, time_graph, rate_change, time_add
+
+    if len(time_graph) > 0:
+        if (abs(volume_graph[-1] - volume)/time_graph[-1]) < rate_of_change_cutoff:
+            volume_graph.append(volume)
+            time_add = True
+        else:
+            print("error in rate of change data removed")
+    else:
+        volume_graph.append(volume)
 
 
 def ultrasonic_ping():
@@ -90,15 +112,17 @@ def ultrasonic_ping():
     this function will use the arduino to calculat the distance/
     volume of the tank
     """
-    global board
-    board.set_pin_mode_sonar(7,6,timeout=200000)
+    global board, volume, height
+    calc_height = 21
+    board.set_pin_mode_sonar(8,7,timeout=200000)
     measure = board.sonar_read(7)
+    height = calc_height - measure[0]
+    volume = height* base_SA #gets volume of water in ml
+
+
     
 
-    #send signal to the arduino to ping
-    #record the time differnce when it has been recieved 
-    #calculate distance and respective volume
-    #results.append(volume)
+    
 
 def graph_data():
     global results
@@ -150,6 +174,7 @@ def main_menu():
 #MAIN MENU (ALL THE MODES DEFINED)
 def normal_operation():
     global results
+    results = []
     print("====================================\nYou have entered Normal Operation Mode.\n====================================\ninput (ctrl + c) to return to the main menu\n====================================")
     try:
         while True:
@@ -165,10 +190,8 @@ def data_observation():
         #need to delete the other sections of the list
     try:
         while True:
-            polling_loop()
             if len(results) % 20 == 0:
                 graph_data()
-            #other result printing
 
     except KeyboardInterrupt:
         main_menu()
