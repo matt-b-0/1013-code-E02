@@ -2,9 +2,13 @@
 import time 
 import random
 import matplotlib.pyplot as plt
+from pymata4 import pymata4
 results = []
 pin = '1234'
 pin_can_try = True
+pin_lockout = 0
+max_height = 19
+board = pymata4.Pymata4()
 """
 I couldnt keep up but need to rename functions and variables to maintain 1013 stoopid ass standards 
 MAY NEED TO REPLACE FUNCTION CALLS WITH A RETURN INFORNT OF THEM
@@ -77,6 +81,7 @@ def reactions():
     """
     This will be thefunction that will control both the LED warning lights and the fans for the tank
     """
+    pass 
        
 
 
@@ -85,11 +90,15 @@ def ultrasonic_ping():
     this function will use the arduino to calculat the distance/
     volume of the tank
     """
+    global board
+    board.set_pin_mode_sonar(7,6,timeout=200000)
+    measure = board.sonar_read(7)
+    
+
     #send signal to the arduino to ping
     #record the time differnce when it has been recieved 
     #calculate distance and respective volume
     #results.append(volume)
-    pass
 
 def graph_data():
     global results
@@ -166,8 +175,11 @@ def data_observation():
     
 
 def maintenance():
-    global pin, pin_can_try
+    global pin, pin_can_try, pin_lockout
     attempts = 5
+    if pin_can_try:
+        if pin_lockout >120:
+            pin_can_try = True 
     if pin_can_try:
         try:
             while attempts>0:
@@ -175,6 +187,7 @@ def maintenance():
                 #may have to change if we want to make a numeric key, i have it as a string at the top
                 attempt = input('enter pin: ')
                 if attempt == pin:
+                    print("That was correct. You have 2 minutes to make changes.")
                     adjustments()
                 else:
                     print("That was incorrect")
@@ -182,6 +195,7 @@ def maintenance():
 
             print("You have been locked out of the maintainence system you will be returned to the main menu in 5 seconds:")
             pin_can_try = False
+            pin_lockout = time.time()
             for _ in range(5,0,-1):
                 print(_)
                 time.sleep(1)
@@ -197,13 +211,23 @@ def maintenance():
         main_menu()
 
 def adjustments():
+    global max_height, pin
     """
     this function will allow the user to make adjustmnts to variables that can be changed.
     this function will go through each changable option
     It HAS TO RETURN TO THE MAIN MENU
     or it will stuff up code above
     """
-    pass
+    print("====================================\nYou have entered maintaience mode.\n====================================")
+    print("To edit pin enter (1)\nto edit maximum height enter (2)")
+    option = input("please enter you option or enter ctrl+c to exit to main menu: ")
+    if option == '1':
+        pin = input("please enter the new pin: ")
+    elif option == '2':
+        max_height = int(input("please enter the new max height in cm: "))
+
+
+
 
 
 main_menu()
