@@ -39,7 +39,7 @@ height = 0
 volumeGraph = []
 timeGraph = []
 rateChange = []
-rateOfChangeCutoff = 100 #mL/s
+rateOfChangeCutoff = 3000 #mL/s
 baseSurfaceArea = 24*24
 timeAdd = True
 errorLights = [3,4,5,6]
@@ -86,19 +86,19 @@ def reactions():
             board.digital_write(pin,0)
 
     if heightDif>0.9:
-        board.digital_write(pin[0],1)
-        board.digital_pin_write(pin[1],1)
+        board.digital_write(3,1)
+        board.digital_pin_write(4,1)
         print("Input pump on at HIGH speed")
-    elif heightDif>0.75:
-        board.digital_write(pin[0],1)
+    elif 0.75<heightDif<0.9:
+        board.digital_write(3,1)
         print("Input pump on at LOW speed")
     elif 0.1<heightDif<0.25:
-        board.digital_write(pin[2],1)
-        board.digital_pin_write(pin[3],1)
-        print("Output pump on at HIGH speed")
+        board.digital_pin_write(5,1)
+        print("Output pump on at Low speed")
     elif 0<heightDif<0.1:
-        board.digital_write(pin[2],1)
-        print("Output pump on at LOW speed")
+        board.digital_write(5,1)
+        board.digital_write(6,1)
+        print("Output pump on at High speed")
     elif heightDif <0:
         print(f"Volume is at max level\nmax volume is {maxHeight*baseSurfaceArea} mL")
 
@@ -134,8 +134,9 @@ def ultrasonic_ping():
     global board, volume, height
     calcHeight = 21
     board.set_pin_mode_sonar(8,7,timeout=200000)
-    measure = board.sonar_read(7)
+    measure = board.sonar_read(8)
     height = calcHeight - measure[0]
+    print(height)
     volume = height * baseSurfaceArea #gets volume of water in ml
     
 
