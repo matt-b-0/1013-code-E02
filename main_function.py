@@ -5,9 +5,9 @@ import matplotlib.pyplot as plt
 from pymata4 import pymata4
 results = []
 pin = '1234'
-pin_can_try = True
-pin_lockout = None
-max_height = 20
+pinCanTry = True
+pinLockout = None
+maxHeight = 20
 board = pymata4.Pymata4()
 """
 I couldnt keep up but need to rename functions and variables to maintain 1013 stoopid ass standards 
@@ -36,16 +36,21 @@ implement reactions: allows for fans and LED to turn on.
 
 distances = 0
 height = 0
-volume_graph = []
-time_graph = []
-rate_change = []
-rate_of_change_cutoff = 100 #mL/s
-base_SA = 24*24
-time_add = True
-error_lights = [3,4,5,6]
+volumeGraph = []
+timeGraph = []
+rateChange = []
+rateOfChangeCutoff = 100 #mL/s
+baseSurfaceArea = 24*24
+timeAdd = True
+errorLights = [3,4,5,6]
 
+# polling_loop function calls various other functions, every 1.5 seconds
+# INPUTS: None (timeAdd as a global variable)
+# OUTPUTS: None
+# Created by Matt
+# Date created: 05/09/2023
 def polling_loop():
-    global results, time_add
+    global results, timeAdd
     """
     need to understand if everythin is called from the polling loop or if it just used to gether data.
     """
@@ -53,77 +58,95 @@ def polling_loop():
     startTime = time.time()
     ultrasonic_ping() 
     print(f"{volume}")#print(volume) mL
-    data_clean()
 
-    if time_add:
+    data_clean()
+    if timeAdd:
         reactions()
     time.sleep(1.5)
     endTime = time.time()
     runTime = endTime - startTime
-    if time_add:
-        time_graph.append(runTime)
-    print(f'runtime = {runTime}')
+    if timeAdd:
+        timeGraph.append(runTime)
+    print(f'Runtime = {runTime}')
 
+# reactions function checks for volume level, turns on necessary warning LED and print statements of pump status
+# INPUTS: NONE (maxHeight, height, errorLights, baseSurfaceArea as global variables)
+# OUTPUTS: NONE
+# Created by Matt
+# Date created: 05/09/2023
 def reactions():
     """
-    This will be thefunction that will control both the LED warning lights and the fans for the tank
+    This will be the function that will control both the LED warning lights and the fans for the tank
     """
-    global max_height, height, board, error_lights
-    height_dif = (max_height - height)/max_height
+    global maxHeight, height, board, errorLights, baseSurfaceArea
+    heightDif = (maxHeight - height)/maxHeight
 
-    for pin in error_lights:
+    for pin in errorLights:
             board.set_pin_mode_digital_output(pin)
             board.digital_write(pin,0)
 
-    if height_dif>0.9:
+    if heightDif>0.9:
         board.digital_write(pin[0],1)
         board.digital_pin_write(pin[1],1)
-        print("input pump on at HIGH speed")
-    elif height_dif>0.75:
+        print("Input pump on at HIGH speed")
+    elif heightDif>0.75:
         board.digital_write(pin[0],1)
-        print("input pump on at LOW speed")
-    elif 0.1<height_dif<0.25:
+        print("Input pump on at LOW speed")
+    elif 0.1<heightDif<0.25:
         board.digital_write(pin[2],1)
         board.digital_pin_write(pin[3],1)
-        print("output pump on at HIGH speed")
-    elif 0<height_dif<0.1:
+        print("Output pump on at HIGH speed")
+    elif 0<heightDif<0.1:
         board.digital_write(pin[2],1)
-        print("output pump on at LOW speed")
-    elif height <0:
-        print(f"volume is at max level\nmax volume is {max_height*base_SA} mL")
+        print("Output pump on at LOW speed")
+    elif heightDif <0:
+        print(f"Volume is at max level\nmax volume is {maxHeight*baseSurfaceArea} mL")
 
-        
-       
+# data_clean function checks to see if last ultrasonic read involves a change of more than the rate-of-change-cutoff and 
+# disregards it if it is
+# INPUTS: None (timeGraph, volumeGraph, volume, rateOfChangeCutoff as global variables)
+# OUTPUTS: NONE (appended volumeGraph as a global variable)
+# Created by Matt
+# Date created: 05/09/2023
 def data_clean():
-    global volume, volume_graph, time_graph, rate_change, time_add
+    global volume, volumeGraph, timeGraph, rateChange, timeAdd
 
-    if len(time_graph) > 0:
-        if (abs(volume_graph[-1] - volume)/time_graph[-1]) < rate_of_change_cutoff:
-            volume_graph.append(volume)
-            time_add = True
+    if len(timeGraph) > 0:
+        if (abs(volumeGraph[-1] - volume)/timeGraph[-1]) < rateOfChangeCutoff:
+            volumeGraph.append(volume)
+            timeAdd = True
         else:
-            print("error in rate of change data removed")
+            print("Error in rate of change data removed")
     else:
-        volume_graph.append(volume)
+        volumeGraph.append(volume)
 
-
+# ultrasonic_ping function uses the ultrasonic sensor to determine the distance from sensor to the water, 
+# and then determines the distance from this
+# INPUTS: None
+# OUTPUTS: None (volume and height of water as global variables)
+# Created by Matt
+# Date created: 05/09/2023
 def ultrasonic_ping():
     """
-    this function will use the arduino to calculat the distance/
+    this function will use the arduino to calculate the distance/
     volume of the tank
     """
     global board, volume, height
-    calc_height = 21
+    calcHeight = 21
     board.set_pin_mode_sonar(8,7,timeout=200000)
     measure = board.sonar_read(7)
-    height = calc_height - measure[0]
-    volume = height* base_SA #gets volume of water in ml
+    height = calcHeight - measure[0]
+    volume = height * baseSurfaceArea #gets volume of water in ml
+    
 
 
     
 
-    
-
+# graph_data function plots volume against time
+# INPUTS: None
+# OUTPUTS: None (graph of data displayed)
+# Created by Matt
+# Date created: 05/09/2023
 def graph_data():
     global results
     """
@@ -138,6 +161,11 @@ def graph_data():
     #plt.show()
     pass
 
+# main_menu functions lets user choose a mode of operation
+# INPUTS: None
+# OUTPUTS: None
+# Created by Matt
+# Date created: 05/09/2023
 def main_menu():
     """
     This will be the main menu for tank operation
@@ -149,21 +177,21 @@ def main_menu():
     try:
         print("====================================\nWelcome to the water tank system main menu.\n====================================\nOptions for menus are listed below\n(1): Maintenance \n(2). Analysis. \n(3). Normal:\n(ctr+c) Exit program\n====================================")
         while True:
-            user_choice = input("please select an option from above by entering a number: ")
-            if user_choice == '1':
-                print("maintenance mode")
+            userChoice = input("Please select an option from above by entering a number: ")
+            if userChoice == '1':
+                print("Maintenance mode")
                 # Call the maintenance function
                 maintenance()
-            elif user_choice == '2':
+            elif userChoice == '2':
                 print("Data Analysis mode")
                 # Call analysis function
                 data_observation()
-            elif user_choice == '3':
-                print("normal operation")
+            elif userChoice == '3':
+                print("Normal operation")
                 # Call normal operation function
                 normal_operation()
             else:
-                print("invalid input")
+                print("Invalid input")
     except KeyboardInterrupt:
         exit(0)
 
@@ -172,6 +200,12 @@ def main_menu():
 
 #HERE:--->
 #MAIN MENU (ALL THE MODES DEFINED)
+
+# When normal mode is chosen, run the polling loop until keyboard is interrupted
+# INPUTS: None
+# OUTPUTS: None (volume and height of water as global variables)
+# Created by Matt
+# Date created: 05/09/2023
 def normal_operation():
     global results
     results = []
@@ -182,6 +216,11 @@ def normal_operation():
     except KeyboardInterrupt:
         main_menu()
 
+# When data observation mode is chosen, the available data is graphed
+# INPUTS: None (results as a global variable)
+# OUTPUTS: None 
+# Created by Matt
+# Date created: 05/09/2023
 def data_observation():
     global results
     print("====================================\nYou have entered Data Observation Mode.\n====================================\ninput (ctrl + c) to return to the main menu====================================")
@@ -196,19 +235,23 @@ def data_observation():
     except KeyboardInterrupt:
         main_menu()
     
-
+# When maintenance mode is chosen, asks user for PIN, if correct sends to settings adjustments, if incorrect returns to home screen
+# INPUTS: None (pin,pinCanTry and pinLockout as global variables)
+# OUTPUTS: None 
+# Created by Matt
+# Date created: 05/09/2023
 def maintenance():
-    global pin, pin_can_try, pin_lockout
+    global pin, pinCanTry, pinLockout
     attempts = 5
-    if pin_can_try:
-        if pin_lockout >120:
-            pin_can_try = True 
-    if pin_can_try:
+    if pinCanTry:
+        if pinLockout >120:
+            pinCanTry = True 
+    if pinCanTry:
         try:
             while attempts>0:
-                print(f'====================================\nYou have entered maintaience mode.\n====================================\nPlease enter the correct {len(pin)} digit pin to make adjustments\nYou have {attempts} attempts left.\nenter (ctrl + c) to return to main menu\n====================================')
+                print(f'====================================\nYou have entered maintenance mode.\n====================================\nPlease enter the correct {len(pin)} digit pin to make adjustments\nYou have {attempts} attempts left.\nenter (ctrl + c) to return to main menu\n====================================')
                 #may have to change if we want to make a numeric key, i have it as a string at the top
-                attempt = input('enter pin: ')
+                attempt = input('Enter pin: ')
                 if attempt == pin:
                     print("That was correct. You have 2 minutes to make changes.")
                     adjustments()
@@ -217,8 +260,8 @@ def maintenance():
                     attempts-=1
 
             print("You have been locked out of the maintainence system you will be returned to the main menu in 5 seconds:")
-            pin_can_try = False
-            pin_lockout = time.time()
+            pinCanTry = False
+            pinLockout = time.time()
             for _ in range(5,0,-1):
                 print(_)
                 time.sleep(1)
@@ -233,28 +276,34 @@ def maintenance():
             time.sleep(1)
         main_menu()
 
+# adjustments function allows the user to alter the maximum height of the tank or the pin, so that future calculations are correct
+# INPUTS: None
+# OUTPUTS: None (New maxHeight or new pin as global variables)
+# Created by Matt
+# Date created: 05/09/2023
 def adjustments():
-    global max_height, pin
+    global maxHeight, pin
     """
-    this function will allow the user to make adjustmnts to variables that can be changed.
+    this function will allow the user to make adjustments to variables that can be changed.
     this function will go through each changable option
     It HAS TO RETURN TO THE MAIN MENU
     or it will stuff up code above
     """
-    print("====================================\nYou have entered maintaience mode.\n====================================")
-    print("To edit pin enter (1)\nto edit maximum height enter (2)")
-    option = input("please enter you option or enter ctrl+c to exit to main menu: ")
+    print("====================================\nYou have entered maintenance mode.\n====================================")
+    print("To edit pin enter (1)\nTo edit maximum height enter (2)")
+    option = input("Please enter your selection or enter ctrl+c to exit to main menu: ")
     if option == '1':
-        pin = input("please enter the new pin: ")
+        pin = input("Please enter the new pin: ")
     elif option == '2':
-        max_height = int(input("please enter the new max height in cm: "))
+        maxHeight = int(input("Please enter the new maximum height in cm: "))
 
 
 
 
 
 main_menu()
-seven_segment = {
+
+sevenSegment = {
         "0": [1, 1, 1, 1, 1, 1, 0],  # 0
         "1": [0, 1, 1, 0, 0, 0, 0],  # 1
         "2": [1, 1, 0, 1, 1, 0, 1],  # 2
