@@ -9,6 +9,7 @@ pinCanTry = True
 pinLockout = None
 maxHeight = 20
 board = pymata4.Pymata4()
+board.set_sampling_interval(1000)
 """
 I couldnt keep up but need to rename functions and variables to maintain 1013 stoopid ass standards 
 MAY NEED TO REPLACE FUNCTION CALLS WITH A RETURN INFORNT OF THEM
@@ -117,6 +118,7 @@ def data_clean():
             timeAdd = True
         else:
             print("Error in rate of change data removed")
+            timeAdd = False
     else:
         volumeGraph.append(volume)
 
@@ -132,7 +134,7 @@ def ultrasonic_ping():
     volume of the tank
     """
     global board, volume, height
-    calcHeight = 21
+    calcHeight = 22
     board.set_pin_mode_sonar(18,19,timeout=200000)
     measure = board.sonar_read(18)
     height = calcHeight - measure[0]
