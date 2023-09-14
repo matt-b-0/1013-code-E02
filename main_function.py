@@ -10,7 +10,7 @@ pinLockout = None
 maxHeight = 20
 maxVolume = 10000
 board = pymata4.Pymata4()
-board.set_sampling_interval(1000)
+board.set_sampling_interval(750)
 """
 I couldnt keep up but need to rename functions and variables to maintain 1013 stoopid ass standards 
 MAY NEED TO REPLACE FUNCTION CALLS WITH A RETURN INFORNT OF THEM
@@ -41,7 +41,7 @@ height = 0
 volumeGraph = []
 timeGraph = []
 rateChange = []
-rateOfChangeCutoff = 3000 #mL/s
+rateOfChangeCutoff = 2000 #mL/s
 baseSurfaceArea = 24*24
 timeAdd = True
 errorLights = [14,15,16,17]
@@ -68,7 +68,7 @@ def polling_loop():
     endTime = time.time()
     runTime = endTime - startTime
     if timeAdd:
-        timeGraph.append(runTime)
+        timeGraph.append(time.time())
     print(f'Runtime = {runTime}')
 
 # reactions function checks for volume level, turns on necessary warning LED and print statements of pump status
@@ -97,11 +97,11 @@ def reactions():
     elif 0.75<(volume/maxVolume)<0.9:
         board.digital_pin_write(16,1)
         print("Output pump on at Low speed")
-    elif 0.9<heightDif<1:
+    elif 0.9<(volume/maxVolume)<1:
         board.digital_write(16,1)
         board.digital_write(17,1)
         print("Output pump on at High speed")
-    elif (volume/maxVolume)>0:
+    elif (volume/maxVolume)>1:
         print(f"Volume is beyond max volume {maxVolume} mL")
 
 # data_clean function checks to see if last ultrasonic read involves a change of more than the rate-of-change-cutoff and 
@@ -113,8 +113,8 @@ def reactions():
 def data_clean():
     global volume, volumeGraph, timeGraph, rateChange, timeAdd
 
-    if len(timeGraph) > 0:
-        if (abs(volumeGraph[-1] - volume)/timeGraph[-1]) < rateOfChangeCutoff:
+    if len(timeGraph) > 1:
+        if abs(volumeGraph[-1] - volume) < rateOfChangeCutoff and volume>=0:
             volumeGraph.append(volume)
             timeAdd = True
         else:
@@ -159,10 +159,12 @@ def graph_data():
     """
     plt.figure(1)
     plt.title("Volume against Time")
-    plt.errorbar(timeGraph, volumeGraph, linestyle = "--", marker = "o")
+    yGraph = [timeGraph[_]-timeGraph[-20] for _ in range(-20,0)]
+    plt.plot(yGraph, [volumeGraph[_] for _ in range(-20,0)], linestyle = "--", marker = "o")
     plt.xlabel("Time (s)")
     plt.ylabel("Volume (mL)")
     plt.show()
+    
 
 # main_menu functions lets user choose a mode of operation
 # INPUTS: None
@@ -210,13 +212,16 @@ def main_menu():
 # Created by Matt
 # Date created: 05/09/2023
 def normal_operation():
-    global results
-    results = []
+    global volumeGraph, timeGraph
     print("====================================\nYou have entered Normal Operation Mode.\n====================================\ninput (ctrl + c) to return to the main menu\n====================================")
     try:
         while True:
             polling_loop()
     except KeyboardInterrupt:
+        for pin in errorLights:
+            board.set_pin_mode_digital_output(pin)
+            board.digital_write(pin,0)
+        
         main_menu()
 
 # When data observation mode is chosen, the available data is graphed
@@ -225,8 +230,8 @@ def normal_operation():
 # Created by Matt
 # Date created: 05/09/2023
 def data_observation():
-    global results, volumeGraph
-    print("====================================\nYou have entered Data Observation Mode.\n====================================\ninput (ctrl + c) to return to the main menu====================================")
+    global volumeGraph, timeGraph
+    print("====================================\nYou have entered Data Observation Mode.\n====================================\ninput (ctrl + c) to return to the main menu\n====================================")
     
         #need to delete the other sections of the list
     try:
@@ -234,7 +239,7 @@ def data_observation():
             print("please sleect an option from the following to observe data\n(1) create a graph of 20 data points collected from normal mode\n(2) display the last recorded volume\n(ctrl + c) Main Menu")
             analysisOption = input("please provide input: ")
             if analysisOption == '1':
-                if len(volumeGraph) >=20:
+                if len(volumeGraph) >20:
                     graph_data()
                 else:
                     print("not enough stored data")
@@ -249,6 +254,9 @@ def data_observation():
                 print("invalid option")
 
     except KeyboardInterrupt:
+        digits = [7, 9, 10, 13] # Digits 1-4
+        for digit in digits:
+            board.digital_write(digit, 1)
         main_menu()
     
 # When maintenance mode is chosen, asks user for PIN, if correct sends to settings adjustments, if incorrect returns to home screen
@@ -319,7 +327,7 @@ def seven_seg(string):
     seg = [12, 8, 5, 4, 3, 11, 6] # Segments a - g
 
     while len(string) <4:
-        string = '0' + string
+        string = '_' + string
 
     dictionary = {
         "0": [1, 1, 1, 1, 1, 1, 0],
@@ -357,7 +365,8 @@ def seven_seg(string):
         "W": [0, 1, 1, 1, 1, 1, 0],
         "X": [0, 1, 1, 0, 1, 1, 1],
         "Y": [0, 1, 1, 1, 0, 1, 1],
-        "Z": [1, 1, 0, 1, 1, 0, 1]
+        "Z": [1, 1, 0, 1, 1, 0, 1],
+        "_": [0, 0, 0, 0, 0, 0, 0]
     }
     for pin in pins:
         board.set_pin_mode_digital_output(pin)
