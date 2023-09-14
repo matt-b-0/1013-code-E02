@@ -42,7 +42,7 @@ rateChange = []
 rateOfChangeCutoff = 3000 #mL/s
 baseSurfaceArea = 24*24
 timeAdd = True
-errorLights = [3,4,5,6]
+errorLights = [14,15,16,17]
 
 # polling_loop function calls various other functions, every 1.5 seconds
 # INPUTS: None (timeAdd as a global variable)
@@ -86,18 +86,18 @@ def reactions():
             board.digital_write(pin,0)
 
     if heightDif>0.9:
-        board.digital_write(3,1)
-        board.digital_pin_write(4,1)
+        board.digital_write(14,1)
+        board.digital_pin_write(15,1)
         print("Input pump on at HIGH speed")
     elif 0.75<heightDif<0.9:
-        board.digital_write(3,1)
+        board.digital_write(14,1)
         print("Input pump on at LOW speed")
     elif 0.1<heightDif<0.25:
-        board.digital_pin_write(5,1)
+        board.digital_pin_write(16,1)
         print("Output pump on at Low speed")
     elif 0<heightDif<0.1:
-        board.digital_write(5,1)
-        board.digital_write(6,1)
+        board.digital_write(16,1)
+        board.digital_write(17,1)
         print("Output pump on at High speed")
     elif heightDif <0:
         print(f"Volume is at max level\nmax volume is {maxHeight*baseSurfaceArea} mL")
@@ -133,8 +133,8 @@ def ultrasonic_ping():
     """
     global board, volume, height
     calcHeight = 21
-    board.set_pin_mode_sonar(8,7,timeout=200000)
-    measure = board.sonar_read(8)
+    board.set_pin_mode_sonar(18,19,timeout=200000)
+    measure = board.sonar_read(18)
     height = calcHeight - measure[0]
     print(height)
     volume = height * baseSurfaceArea #gets volume of water in ml
@@ -149,18 +149,17 @@ def ultrasonic_ping():
 # Created by Matt
 # Date created: 05/09/2023
 def graph_data():
-    global results
+    global timeGraph, volumeGraph
     """
     this function will graph the data 
     from the previous 20 data points of volume data
     """
-    #plt.figure(1)
-    #plt.title("Volume against Time")
-    #plt.errorbar(time, data, linestyle = "--", marker = "o")
-    #plt.xlabel("Time (s)")
-    #plt.ylabel("Volume (mL)")
-    #plt.show()
-    pass
+    plt.figure(1)
+    plt.title("Volume against Time")
+    plt.errorbar(timeGraph, volumeGraph, linestyle = "--", marker = "o")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Volume (mL)")
+    plt.show()
 
 # main_menu functions lets user choose a mode of operation
 # INPUTS: None
@@ -238,7 +237,13 @@ def data_observation():
                     print("not enough stored data")
             elif analysisOption == '2':
                 #have a section for the 7 seg
-                pass 
+                if len(volumeGraph)>0:
+                    outputMessage = str(round(volumeGraph[-1]))
+                    seven_seg(outputMessage)
+                else:
+                    print("Need to record some data first")
+            else:
+                print("invalid option")
 
     except KeyboardInterrupt:
         main_menu()
@@ -305,47 +310,78 @@ def adjustments():
     elif option == '2':
         maxHeight = int(input("Please enter the new maximum height in cm: "))
 
+def seven_seg(string):
+    pins = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+    digits = [7, 9, 10, 13] # Digits 1-4
+    seg = [12, 8, 5, 4, 3, 11, 6] # Segments a - g
 
+    while len(string) <4:
+        string = '0' + string
+
+    dictionary = {
+        "0": [1, 1, 1, 1, 1, 1, 0],
+        "1": [0, 1, 1, 0, 0, 0, 0],
+        "2": [1, 1, 0, 1, 1, 0, 1],
+        "3": [1, 1, 1, 1, 0, 0, 1],
+        "4": [0, 1, 1, 0, 0, 1, 1],
+        "5": [1, 0, 1, 1, 0, 1, 1],
+        "6": [1, 0, 1, 1, 1, 1, 1],
+        "7": [1, 1, 1, 0, 0, 0, 0],
+        "8": [1, 1, 1, 1, 1, 1, 1],
+        "9": [1, 1, 1, 1, 0, 1, 1],
+        "A": [1, 1, 1, 0, 1, 1, 1],
+        "B": [0, 0, 1, 1, 1, 1, 1],
+        "C": [1, 0, 0, 1, 1, 1, 0],
+        "D": [0, 1, 1, 1, 1, 0, 1],
+        "E": [1, 0, 0, 1, 1, 1, 1],
+        "F": [1, 0, 0, 0, 1, 1, 1],
+        "G": [1, 0, 1, 1, 1, 1, 0],
+        "H": [0, 1, 1, 0, 1, 1, 1],
+        "I": [0, 0, 0, 0, 1, 1, 0],
+        "J": [0, 1, 1, 1, 0, 0, 0],
+        "K": [0, 1, 1, 0, 1, 1, 1],
+        "L": [0, 0, 0, 1, 1, 1, 0],
+        "M": [1, 0, 1, 0, 1, 0, 1],
+        "N": [0, 0, 1, 0, 1, 0, 1],
+        "O": [1, 1, 1, 1, 1, 1, 0],
+        "P": [1, 1, 0, 0, 1, 1, 1],
+        "Q": [1, 1, 1, 0, 0, 1, 1],
+        "R": [0, 0, 0, 0, 1, 0, 1],
+        "S": [1, 0, 1, 1, 0, 1, 1],
+        "T": [0, 0, 0, 1, 1, 1, 1],
+        "U": [0, 1, 1, 1, 1, 1, 0],
+        "V": [0, 1, 1, 1, 1, 1, 0],
+        "W": [0, 1, 1, 1, 1, 1, 0],
+        "X": [0, 1, 1, 0, 1, 1, 1],
+        "Y": [0, 1, 1, 1, 0, 1, 1],
+        "Z": [1, 1, 0, 1, 1, 0, 1]
+    }
+    for pin in pins:
+        board.set_pin_mode_digital_output(pin)
+
+    for digit in digits:
+        board.digital_write(digit, 1)
+
+    # Convert input to string
+    string = str(string)
+    numbers = []
+    for char in string:
+        sequence = dictionary[char.upper()]
+        numbers.append(sequence)
+
+
+
+    while True:
+        for n in range(len(digits)):
+            board.digital_write(digits[n], 0)  # Turn on the current digit
+            for i in range(len(seg)):
+                board.digital_write(seg[i], numbers[n][i])  # Write the segment value
+                time.sleep(0.0001)  # Delay for segment display
+                board.digital_write(seg[i], 0)  # Turn off the current segment
+            board.digital_write(digits[n], 1) # Turn off the current digit
 
 
 
 main_menu()
 
-sevenSegment = {
-        "0": [1, 1, 1, 1, 1, 1, 0],  # 0
-        "1": [0, 1, 1, 0, 0, 0, 0],  # 1
-        "2": [1, 1, 0, 1, 1, 0, 1],  # 2
-        "3": [1, 1, 1, 1, 0, 0, 1],  # 3
-        "4": [0, 1, 1, 0, 0, 1, 1],  # 4
-        "5": [1, 0, 1, 1, 0, 1, 1],  # 5
-        "6": [1, 0, 1, 1, 1, 1, 1],  # 6
-        "7": [1, 1, 1, 0, 0, 0, 0],  # 7
-        "8": [1, 1, 1, 1, 1, 1, 1],  # 8
-        "9": [1, 1, 1, 1, 0, 1, 1],  # 9
-        "A": [1, 1, 1, 0, 1, 1, 1],  # A
-        "B": [0, 0, 1, 1, 1, 1, 1],  # B
-        "C": [1, 0, 0, 1, 1, 1, 0],  # C
-        "D": [0, 1, 1, 1, 1, 0, 1],  # D
-        "E": [1, 0, 0, 1, 1, 1, 1],  # E
-        "F": [1, 0, 0, 0, 1, 1, 1],  # F
-        "G": [1, 0, 1, 1, 1, 1, 0],  # G
-        "H": [0, 0, 1, 0, 1, 1, 1],  # H
-        "I": [0, 0, 0, 0, 1, 1, 0],  # I
-        "J": [0, 1, 1, 1, 1, 0, 0],  # J
-        "K": [1, 0, 1, 0, 1, 1, 1],  # K
-        "L": [0, 0, 0, 1, 1, 1, 0],  # L
-        "M": [1, 0, 1, 0, 1, 0, 0],  # M
-        "N": [1, 1, 1, 0, 1, 1, 0],  # N
-        "O": [1, 1, 1, 1, 1, 1, 0],  # O
-        "P": [1, 1, 0, 0, 1, 1, 1],  # P
-        "Q": [1, 1, 1, 0, 0, 1, 1],  # Q
-        "R": [1, 1, 0, 0, 1, 1, 0],  # R
-        "S": [1, 0, 1, 1, 0, 1, 1],  # S
-        "T": [0, 0, 0, 1, 1, 1, 1],  # T
-        "U": [0, 1, 1, 1, 1, 1, 0],  # U
-        "V": [0, 1, 1, 1, 0, 1, 0],  # V
-        "W": [0, 1, 0, 1, 0, 1, 0],  # W
-        "X": [0, 1, 1, 0, 1, 1, 1],  # X
-        "Y": [0, 1, 1, 1, 0, 1, 1],  # Y
-        "Z": [1, 1, 0, 1, 0, 0, 1]  # Z
-    }
+
