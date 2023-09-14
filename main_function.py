@@ -8,6 +8,7 @@ pin = '1234'
 pinCanTry = True
 pinLockout = None
 maxHeight = 20
+maxVolume = 10000
 board = pymata4.Pymata4()
 board.set_sampling_interval(1000)
 """
@@ -79,29 +80,29 @@ def reactions():
     """
     This will be the function that will control both the LED warning lights and the fans for the tank
     """
-    global maxHeight, height, board, errorLights, baseSurfaceArea
+    global maxHeight, height, board, errorLights, baseSurfaceArea, maxVolume, volume
     heightDif = (maxHeight - height)/maxHeight
 
     for pin in errorLights:
             board.set_pin_mode_digital_output(pin)
             board.digital_write(pin,0)
 
-    if heightDif>0.9:
+    if (volume/maxVolume)<0.1:
         board.digital_write(14,1)
         board.digital_pin_write(15,1)
         print("Input pump on at HIGH speed")
-    elif 0.75<heightDif<0.9:
+    elif 0.1<(volume/maxVolume)<0.25:
         board.digital_write(14,1)
         print("Input pump on at LOW speed")
-    elif 0.1<heightDif<0.25:
+    elif 0.75<(volume/maxVolume)<0.9:
         board.digital_pin_write(16,1)
         print("Output pump on at Low speed")
-    elif 0<heightDif<0.1:
+    elif 0.9<heightDif<1:
         board.digital_write(16,1)
         board.digital_write(17,1)
         print("Output pump on at High speed")
-    elif heightDif <0:
-        print(f"Volume is at max level\nmax volume is {maxHeight*baseSurfaceArea} mL")
+    elif (volume/maxVolume)>0:
+        print(f"Volume is beyond max volume {maxVolume} mL")
 
 # data_clean function checks to see if last ultrasonic read involves a change of more than the rate-of-change-cutoff and 
 # disregards it if it is
