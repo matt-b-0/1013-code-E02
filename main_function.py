@@ -158,7 +158,7 @@ def graph_data():
     #plt.title("Volume against Time")
     #plt.errorbar(time, data, linestyle = "--", marker = "o")
     #plt.xlabel("Time (s)")
-    #plt.ylabel("Volume (m^3)")
+    #plt.ylabel("Volume (mL)")
     #plt.show()
     pass
 
@@ -223,15 +223,22 @@ def normal_operation():
 # Created by Matt
 # Date created: 05/09/2023
 def data_observation():
-    global results
+    global results, volumeGraph
     print("====================================\nYou have entered Data Observation Mode.\n====================================\ninput (ctrl + c) to return to the main menu====================================")
-    if len(results) >=20:
-        graph_data()
+    
         #need to delete the other sections of the list
     try:
         while True:
-            if len(results) % 20 == 0:
-                graph_data()
+            print("please sleect an option from the following to observe data\n(1) create a graph of 20 data points collected from normal mode\n(2) display the last recorded volume\n(ctrl + c) Main Menu")
+            analysisOption = input("please provide input: ")
+            if analysisOption == '1':
+                if len(volumeGraph) >=20:
+                    graph_data()
+                else:
+                    print("not enough stored data")
+            elif analysisOption == '2':
+                #have a section for the 7 seg
+                pass 
 
     except KeyboardInterrupt:
         main_menu()
