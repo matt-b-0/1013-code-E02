@@ -1,4 +1,8 @@
-#main function file 
+#main function file that contains all of the code for a water tank monitoring system
+#created by the J02 group
+#last edited 15/09
+#version 1.2.7
+
 import time 
 import random
 import matplotlib.pyplot as plt
@@ -43,7 +47,7 @@ errorLights = [14,15,16,17]
 # Created by Matt
 # Date created: 05/09/2023
 def polling_loop():
-    global results, timeAdd
+    global timeAdd
     """
     need to understand if everythin is called from the polling loop or if it just used to gether data.
     """
@@ -63,7 +67,7 @@ def polling_loop():
     print(f'Runtime = {runTime}')
 
 # reactions function checks for volume level, turns on necessary warning LED and print statements of pump status
-# INPUTS: NONE (maxHeight, height, errorLights, baseSurfaceArea as global variables)
+# INPUTS: NONE (volume, maxVolume errorLights, baseSurfaceArea as global variables)
 # OUTPUTS: NONE
 # Created by Matt
 # Date created: 05/09/2023
@@ -71,8 +75,7 @@ def reactions():
     """
     This will be the function that will control both the LED warning lights and the fans for the tank
     """
-    global maxHeight, height, board, errorLights, baseSurfaceArea, maxVolume, volume
-    heightDif = (maxHeight - height)/maxHeight
+    global board, errorLights, baseSurfaceArea, maxVolume, volume
 
     for pin in errorLights:
             board.set_pin_mode_digital_output(pin)
@@ -97,12 +100,12 @@ def reactions():
 
 # data_clean function checks to see if last ultrasonic read involves a change of more than the rate-of-change-cutoff and 
 # disregards it if it is
-# INPUTS: None (timeGraph, volumeGraph, volume, rateOfChangeCutoff as global variables)
+# INPUTS: None (volume, volumeGraph, timeGraph, rateOfChangeCutoff, timeAdd)
 # OUTPUTS: NONE (appended volumeGraph as a global variable)
 # Created by Matt
 # Date created: 05/09/2023
 def data_clean():
-    global volume, volumeGraph, timeGraph, rateChange, timeAdd
+    global volume, volumeGraph, timeGraph, rateOfChangeCutoff, timeAdd
 
     if len(timeGraph) > 1:
         if abs(volumeGraph[-1] - volume) < rateOfChangeCutoff and volume>=0:
@@ -305,12 +308,18 @@ def adjustments():
     or it will stuff up code above
     """
     print("====================================\nYou have entered maintenance mode.\n====================================")
-    print("To edit pin enter (1)\nTo edit maximum height enter (2)")
-    option = input("Please enter your selection or enter ctrl+c to exit to main menu: ")
-    if option == '1':
-        pin = input("Please enter the new pin: ")
-    elif option == '2':
-        maxHeight = int(input("Please enter the new maximum height in cm: "))
+    print(f"(1) Change current pin{pin}\n(2) Edit maximum height enter {maxHeight}mL")
+    try:
+        while True:
+            option = input("Please enter your selection or enter ctrl+c to exit to main menu: ")
+            if option == '1':
+                pin = input("Please enter the new pin: ")
+            elif option == '2':
+                maxHeight = int(input("Please enter the new maximum height in cm: "))
+            else:
+                print("Invalid input try again.")
+    except KeyboardInterrupt:
+        print(f"pin = {pin}\nMaximum height = {maxHeight}cm")
 
 def seven_seg(string):
     pins = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
