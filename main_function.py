@@ -1,13 +1,16 @@
 #main function file that contains all of the code for a water tank monitoring system
-#created by the J02 group
-#last edited 15/09
+#Team: E02
+#Members: Sam Potter, Matthew Brasacchio, Noah Clark, Kush Berry, Yousouf Palitanawala
+#last edited 15/09/2023
 #version 1.2.7
 
+# Setup
 import time 
 import random
 import matplotlib.pyplot as plt
 from pymata4 import pymata4
 
+# Defined Variables
 pin = '1234'
 pinCanTry = True
 pinLockout = 130
@@ -25,6 +28,8 @@ baseSurfaceArea = 24*24
 timeAdd = True
 errorLights = [14,15,16,17]
 
+
+
 # polling_loop function calls various other functions, every 1.5 seconds
 # INPUTS: None (timeAdd as a global variable)
 # OUTPUTS: None
@@ -32,10 +37,7 @@ errorLights = [14,15,16,17]
 # Date created: 05/09/2023
 def polling_loop():
     global timeAdd
-    """
-    need to understand if everythin is called from the polling loop or if it just used to gether data.
-    """
-
+    
     startTime = time.time()
     ultrasonic_ping() 
     print(f"Volume = {volume}mL")#print(volume) mL
@@ -49,6 +51,8 @@ def polling_loop():
     if timeAdd:
         timeGraph.append(time.time())
     print(f'Runtime = {runTime}')
+
+
 
 # reactions function checks for volume level, turns on necessary warning LED and print statements of pump status
 # INPUTS: NONE (volume, maxVolume errorLights, baseSurfaceArea as global variables)
@@ -80,6 +84,8 @@ def reactions():
     elif (volume/maxVolume)>1:
         print(f"Volume is beyond max volume {maxVolume} mL")
 
+
+
 # data_clean function checks to see if last ultrasonic read involves a change of more than the rate-of-change-cutoff and 
 # disregards it if it is
 # INPUTS: None (volume, volumeGraph, timeGraph, rateOfChangeCutoff, timeAdd)
@@ -99,6 +105,8 @@ def data_clean():
     else:
         volumeGraph.append(volume)
 
+
+
 # ultrasonic_ping function uses the ultrasonic sensor to determine the distance from sensor to the water, 
 # and then determines the distance from this
 # INPUTS: None
@@ -113,7 +121,9 @@ def ultrasonic_ping():
     height = calcHeight - measure[0]
     print(f'Height = {height}cm')
     volume = height * baseSurfaceArea #gets volume of water in ml
-    
+
+
+
 # graph_data function plots volume against time for the last 20 data points
 # INPUTS: None
 # OUTPUTS: None (graph of data displayed)
@@ -129,6 +139,8 @@ def graph_data():
     plt.ylabel("Volume (mL)")
     plt.show()
     
+
+
 
 # main_menu functions lets user choose a mode of operation
 # INPUTS: None
@@ -158,6 +170,8 @@ def main_menu():
     except KeyboardInterrupt:
         exit(0)
 
+
+
 # When normal mode is chosen, run the polling loop until keyboard is interrupted
 # INPUTS: None
 # OUTPUTS: None (volume and height of water as global variables)
@@ -175,6 +189,8 @@ def normal_operation():
             board.digital_write(pin,0)
         
         main_menu()
+
+
 
 # When data observation mode is chosen, the available data is graphed
 # INPUTS: None (results as a global variable)
@@ -209,7 +225,9 @@ def data_observation():
         for digit in digits:
             board.digital_write(digit, 1)
         main_menu()
-    
+
+
+
 # When maintenance mode is chosen, asks user for PIN, if correct sends to settings adjustments, if incorrect returns to home screen
 # INPUTS: None (pin,pinCanTry and pinLockout as global variables)
 # OUTPUTS: None 
@@ -250,6 +268,8 @@ def maintenance():
             print(_)
             time.sleep(1)
         main_menu()
+
+
 
 # adjustments function allows the user to alter the maximum height of the tank or the pin, so that future calculations are correct
 # INPUTS: None
