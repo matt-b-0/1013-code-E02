@@ -10,7 +10,7 @@ pinLockout = None
 maxHeight = 20
 maxVolume = 10000
 board = pymata4.Pymata4()
-board.set_sampling_interval(750)
+board.set_sampling_interval(1000)
 
 
 """
@@ -50,7 +50,7 @@ def polling_loop():
 
     startTime = time.time()
     ultrasonic_ping() 
-    print(f"{volume}")#print(volume) mL
+    print(f"volume = {volume}mL")#print(volume) mL
 
     data_clean()
     if timeAdd:
@@ -130,7 +130,7 @@ def ultrasonic_ping():
     board.set_pin_mode_sonar(18,19,timeout=200000)
     measure = board.sonar_read(18)
     height = calcHeight - measure[0]
-    print(height)
+    print(f'height = {height}cm')
     volume = height * baseSurfaceArea #gets volume of water in ml
     
 
