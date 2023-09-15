@@ -3,7 +3,7 @@ import time
 import random
 import matplotlib.pyplot as plt
 from pymata4 import pymata4
-results = []
+
 pin = '1234'
 pinCanTry = True
 pinLockout = None
@@ -11,16 +11,8 @@ maxHeight = 20
 maxVolume = 10000
 board = pymata4.Pymata4()
 board.set_sampling_interval(750)
-"""
-I couldnt keep up but need to rename functions and variables to maintain 1013 stoopid ass standards 
-MAY NEED TO REPLACE FUNCTION CALLS WITH A RETURN INFORNT OF THEM
-THIS MAY IMPACT THE WAY SCRIPT WORKS
-WILL HAVE TO DO MORE TESTING FIRST
 
-Current to do list:
-Implement the adjustments function: changes specs of tank manually
-implement reactions: allows for fans and LED to turn on.
-"""
+
 """
  
          )                                   
@@ -36,7 +28,6 @@ implement reactions: allows for fans and LED to turn on.
 """
                                
 
-distances = 0
 height = 0
 volumeGraph = []
 timeGraph = []
@@ -118,7 +109,7 @@ def data_clean():
             volumeGraph.append(volume)
             timeAdd = True
         else:
-            print("Error in rate of change data removed")
+            print("Error in rate of change: data removed")
             timeAdd = False
     else:
         volumeGraph.append(volume)
