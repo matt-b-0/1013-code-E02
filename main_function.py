@@ -10,28 +10,12 @@ from pymata4 import pymata4
 
 pin = '1234'
 pinCanTry = True
-pinLockout = None
+pinLockout = 130
 maxHeight = 20
 maxVolume = 10000
 board = pymata4.Pymata4()
 board.set_sampling_interval(1000)
-
-
-"""
- 
-         )                                   
-      ( /(  (           )     )    )      )  
- (    )\()) )\ )     ( /(  ( /( ( /(   ( /(  
- )\  ((_)\ (()/(     )\()) )\()))\())  )\()) 
-((_)  _((_) /(_))_  ((_)\ ((_)\((_)\  ((_)\  
-| __|| \| |(_)) __|  / (_)/  (_)/ (_)|__ (_) 
-| _| | .` |  | (_ |  | | | () | | |   |_ \   
-|___||_|\_|   \___|  |_|  \__/  |_|  |___/   
-                                             
-
-"""
                                
-
 height = 0
 volumeGraph = []
 timeGraph = []
@@ -54,7 +38,7 @@ def polling_loop():
 
     startTime = time.time()
     ultrasonic_ping() 
-    print(f"volume = {volume}mL")#print(volume) mL
+    print(f"Volume = {volume}mL")#print(volume) mL
 
     data_clean()
     if timeAdd:
@@ -72,10 +56,8 @@ def polling_loop():
 # Created by Matt
 # Date created: 05/09/2023
 def reactions():
-    """
-    This will be the function that will control both the LED warning lights and the fans for the tank
-    """
-    global board, errorLights, baseSurfaceArea, maxVolume, volume
+    global maxHeight, height, board, errorLights, baseSurfaceArea, maxVolume, volume
+    heightDif = (maxHeight - height)/maxHeight
 
     for pin in errorLights:
             board.set_pin_mode_digital_output(pin)
@@ -124,33 +106,21 @@ def data_clean():
 # Created by Matt
 # Date created: 05/09/2023
 def ultrasonic_ping():
-    """
-    this function will use the arduino to calculate the distance/
-    volume of the tank
-    """
     global board, volume, height
     calcHeight = 22
     board.set_pin_mode_sonar(18,19,timeout=200000)
     measure = board.sonar_read(18)
     height = calcHeight - measure[0]
-    print(f'height = {height}cm')
+    print(f'Height = {height}cm')
     volume = height * baseSurfaceArea #gets volume of water in ml
     
-
-
-    
-
-# graph_data function plots volume against time
+# graph_data function plots volume against time for the last 20 data points
 # INPUTS: None
 # OUTPUTS: None (graph of data displayed)
 # Created by Matt
 # Date created: 05/09/2023
 def graph_data():
     global timeGraph, volumeGraph
-    """
-    this function will graph the data 
-    from the previous 20 data points of volume data
-    """
     plt.figure(1)
     plt.title("Volume against Time")
     yGraph = [timeGraph[_]-timeGraph[-20] for _ in range(-20,0)]
@@ -166,12 +136,6 @@ def graph_data():
 # Created by Matt
 # Date created: 05/09/2023
 def main_menu():
-    """
-    This will be the main menu for tank operation
-    it will be the initial call for the file.
-    everythin is run off this function.
-    """
-    
     print("Choose a mode of operation")
     try:
         print("====================================\nWelcome to the water tank system main menu.\n====================================\nOptions for menus are listed below\n(1): Maintenance \n(2). Analysis. \n(3). Normal:\n(ctr+c) Exit program\n====================================")
@@ -193,12 +157,6 @@ def main_menu():
                 print("Invalid input")
     except KeyboardInterrupt:
         exit(0)
-
-
-
-
-#HERE:--->
-#MAIN MENU (ALL THE MODES DEFINED)
 
 # When normal mode is chosen, run the polling loop until keyboard is interrupted
 # INPUTS: None
@@ -227,25 +185,24 @@ def data_observation():
     global volumeGraph, timeGraph
     print("====================================\nYou have entered Data Observation Mode.\n====================================\ninput (ctrl + c) to return to the main menu\n====================================")
     
-        #need to delete the other sections of the list
     try:
         while True:
-            print("please sleect an option from the following to observe data\n(1) create a graph of 20 data points collected from normal mode\n(2) display the last recorded volume\n(ctrl + c) Main Menu")
-            analysisOption = input("please provide input: ")
+            print("Please select an option from the following to observe data\n(1) Create a graph of 20 data points collected from normal mode\n(2) Display the last recorded volume\n(ctrl + c) Main Menu")
+            analysisOption = input("Please provide input: ")
             if analysisOption == '1':
                 if len(volumeGraph) >20:
                     graph_data()
                 else:
-                    print("not enough stored data")
+                    print("Not enough stored data")
             elif analysisOption == '2':
                 #have a section for the 7 seg
                 if len(volumeGraph)>0:
                     outputMessage = str(round(volumeGraph[-1]))
                     seven_seg(outputMessage)
                 else:
-                    print("Need to record some data first")
+                    print("Must record some data first")
             else:
-                print("invalid option")
+                print("Invalid option")
 
     except KeyboardInterrupt:
         digits = [7, 9, 10, 13] # Digits 1-4
@@ -267,7 +224,7 @@ def maintenance():
     if pinCanTry:
         try:
             while attempts>0:
-                print(f'====================================\nYou have entered maintenance mode.\n====================================\nPlease enter the correct {len(pin)} digit pin to make adjustments\nYou have {attempts} attempts left.\nenter (ctrl + c) to return to main menu\n====================================')
+                print(f'====================================\nYou have entered maintenance mode.\n====================================\nPlease enter the correct {len(pin)} digit pin to make adjustments\nYou have {attempts} attempts left.\nEnter (ctrl + c) to return to main menu\n====================================')
                 #may have to change if we want to make a numeric key, i have it as a string at the top
                 attempt = input('Enter pin: ')
                 if attempt == pin:
@@ -301,16 +258,10 @@ def maintenance():
 # Date created: 05/09/2023
 def adjustments():
     global maxHeight, pin
-    """
-    this function will allow the user to make adjustments to variables that can be changed.
-    this function will go through each changable option
-    It HAS TO RETURN TO THE MAIN MENU
-    or it will stuff up code above
-    """
     print("====================================\nYou have entered maintenance mode.\n====================================")
-    print(f"(1) Change current pin{pin}\n(2) Edit maximum height enter {maxHeight}mL")
     try:
         while True:
+            print(f"(1) Change current pin: {pin}\n(2) Edit maximum height from {maxHeight}mL")
             option = input("Please enter your selection or enter ctrl+c to exit to main menu: ")
             if option == '1':
                 pin = input("Please enter the new pin: ")
@@ -320,6 +271,7 @@ def adjustments():
                 print("Invalid input try again.")
     except KeyboardInterrupt:
         print(f"pin = {pin}\nMaximum height = {maxHeight}cm")
+        main_menu()
 
 def seven_seg(string):
     pins = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
@@ -380,9 +332,6 @@ def seven_seg(string):
     for char in string:
         sequence = dictionary[char.upper()]
         numbers.append(sequence)
-
-
-
     while True:
         for n in range(len(digits)):
             board.digital_write(digits[n], 0)  # Turn on the current digit
