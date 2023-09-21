@@ -271,26 +271,26 @@ def maintenance():
 
 
 
-# adjustments function allows the user to alter the maximum height of the tank or the pin, so that future calculations are correct
+# adjustments function allows the user to alter the maximum volume of the tank or the pin, so that future calculations are correct
 # INPUTS: None
-# OUTPUTS: None (New maxHeight or new pin as global variables)
+# OUTPUTS: None (New maxVolume or new pin as global variables)
 # Created by Matt
 # Date created: 05/09/2023
 def adjustments():
-    global maxHeight, pin
+    global maxVolume, pin
     print("====================================\nYou have entered maintenance mode.\n====================================")
     try:
         while True:
-            print(f"(1) Change current pin: {pin}\n(2) Edit maximum height from {maxHeight}mL")
+            print(f"(1) Change current pin: {pin}\n(2) Edit maximum voume from {maxVolume}mL")
             option = input("Please enter your selection or enter ctrl+c to exit to main menu: ")
             if option == '1':
                 pin = input("Please enter the new pin: ")
             elif option == '2':
-                maxHeight = int(input("Please enter the new maximum height in cm: "))
+                maxVolume = int(input("Please enter the new max volume in mL: "))
             else:
                 print("Invalid input try again.")
     except KeyboardInterrupt:
-        print(f"pin = {pin}\nMaximum height = {maxHeight}cm")
+        print(f"pin = {pin}\nMaximum volume = {maxVolume}mL")
         main_menu()
 
 def seven_seg(string):
