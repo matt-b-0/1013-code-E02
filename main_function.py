@@ -235,9 +235,9 @@ def data_observation():
 # Date created: 05/09/2023
 def maintenance():
     global pin, pinCanTry, pinLockout
-    attempts = 5
-    if pinCanTry:
-        if pinLockout >120:
+    attempts = 3
+    if not pinCanTry:
+        if (time.time()-pinLockout) >120:
             pinCanTry = True 
     if pinCanTry:
         try:
@@ -263,7 +263,7 @@ def maintenance():
             main_menu()
 
     else:
-        print("You have been locked out of the maintainence system you will be returned to the main menu in 5 seconds:")
+        print(f"You have been locked out of the maintainence system you will be returned to the main menu in 5 seconds\n you have to wait {round(120-(time.time()-pinLockout))} seconds before trying again:")
         for _ in range(5,0,-1):
             print(_)
             time.sleep(1)
@@ -278,12 +278,17 @@ def maintenance():
 # Date created: 05/09/2023
 def adjustments():
     global maxVolume, pin
+    start_time = time.time()
     print("====================================\nYou have entered maintenance mode.\n====================================")
     try:
         while True:
             print(f"(1) Change current pin: {pin}\n(2) Edit maximum voume from {maxVolume}mL")
             option = input("Please enter your selection or enter ctrl+c to exit to main menu: ")
-            if option == '1':
+            if time.time()-start_time >=120:
+                print(f"YOU HAVE TIMED OUT\nTo make more changes enter maintainence again\npin = {pin}\nMaximum volume = {maxVolume}mL")
+                main_menu_exit()
+
+            elif option == '1':
                 pin = input("Please enter the new pin: ")
             elif option == '2':
                 maxVolume = int(input("Please enter the new max volume in mL: "))
@@ -292,6 +297,15 @@ def adjustments():
     except KeyboardInterrupt:
         print(f"pin = {pin}\nMaximum volume = {maxVolume}mL")
         main_menu()
+#main menu function that moves user back to the main menu
+#inputs None
+#outputs None
+def main_menu_exit():
+    print("exiting to main menu")
+    for _ in range(5,0,-1):
+        print(_)
+        time.sleep(1)
+    main_menu()
 
 def seven_seg(string):
     pins = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
