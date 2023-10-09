@@ -289,9 +289,16 @@ def adjustments():
                 main_menu_exit()
 
             elif option == '1':
-                pin = input("Please enter the new pin: ")
+                pin_select = input("Please enter the new pin: ")
+                if len(pin_select) < 3:
+                    print("pin needs to be longer than 3 digits")
+                else: pin = pin_select
             elif option == '2':
-                maxVolume = int(input("Please enter the new max volume in mL: "))
+                maxVolume_select = int(input("Please enter the new max volume in mL: "))
+                if 2500<maxVolume_select<10000:
+                    maxVolume = maxVolume_select
+                else:
+                    print("Invalid range for volume")
             else:
                 print("Invalid input try again.")
     except KeyboardInterrupt:
