@@ -9,6 +9,7 @@ import time
 import random
 import matplotlib.pyplot as plt
 from pymata4 import pymata4
+import math
 
 # Defined Variables
 pin = '1234'
@@ -17,7 +18,10 @@ pinLockout = 130
 maxHeight = 20
 maxVolume = 10000
 board = pymata4.Pymata4()
-board.set_sampling_interval(1000)
+board.set_sampling_interval(800)
+
+responceReg = ['LED_1_red','LED_2_red','LED_3_blue','LED_4_blue','LED_5_yellow','LED_6_RED','Buzzer_1','Buzzer_2','Buzer_3']
+responceReg = [0,0,0,0,0,0,0,0]
                                
 height = 0
 volumeGraph = []
@@ -27,6 +31,17 @@ rateOfChangeCutoff = 2000 #mL/s
 baseSurfaceArea = 24*24
 timeAdd = True
 errorLights = [14,15,16,17]
+
+#definition of things for the thermistor
+thermistor = 0
+R1 = 10000
+c1 = 1.009249522e-03
+c2 = 2.378405444e-04
+c3 = 2.019202697e-07
+temperatures = []
+times = []
+board.set_pin_mode_analog_input(0) #thermistor pin
+originalTime = 0
 
 
 
@@ -39,20 +54,46 @@ def polling_loop():
     global timeAdd
     
     startTime = time.time()
-    ultrasonic_ping() 
+    ultrasonic_ping()
+    thermistor_read()
     print(f"Volume = {volume}mL")#print(volume) mL
 
     data_clean()
     if timeAdd:
         reactions()
-    time.sleep(1.5)
+    time.sleep(0.8)
     endTime = time.time()
     runTime = endTime - startTime
     if timeAdd:
         timeGraph.append(time.time())
     print(f'Runtime = {runTime}')
 
+#thermistor read and record
+#inputs: None()
+def thermistor_read():
+    global originalTime, c1, c2, c3, R1, temperatures, times
+    board.set_pin_mode_analog_input(0)
+    board.set_pin_mode_digital_output(17)
+    v0 = board.analog_read(0)[0]
 
+    if v0 > 0:
+        R2 = R1 * (1023.0 / float(v0) - 1.0)
+        logR2 = math.log(R2)
+        T = (1.0 / (c1 + c2 * logR2 + c3 * logR2 * logR2 * logR2))
+        T = T - 273.15
+        print(T)
+        if T > 0 or T < 100:
+            temperatures.append(T)
+            times.append(time.time() - originalTime)
+        if len(temperatures) > 1:
+            change = T - temperatures[-2]
+            print(change)
+            if change > 0.5 or change < -0.5:
+                # Trigger some alert with leds or buzzer
+                board.digital_write(15, 1)
+            else:
+                board.digital_write(15, 0)
+            # Performing basic filtering
 
 # reactions function checks for volume level, turns on necessary warning LED and print statements of pump status
 # INPUTS: NONE (volume, maxVolume errorLights, baseSurfaceArea as global variables)
@@ -62,24 +103,32 @@ def polling_loop():
 def reactions():
     global maxHeight, height, board, errorLights, baseSurfaceArea, maxVolume, volume
     heightDif = (maxHeight - height)/maxHeight
-
+    #need to turn ser off to not visibly make adjustments
     for pin in errorLights:
             board.set_pin_mode_digital_output(pin)
             board.digital_write(pin,0)
+            for i in range(8):
+                responceReg[i] = 0 #reset shift reg
 
     if (volume/maxVolume)<0.1:
         board.digital_write(14,1)
         board.digital_pin_write(15,1)
+        responceReg[0] = 1
+        responceReg[1] = 1
         print("Input pump on at HIGH speed")
     elif 0.1<(volume/maxVolume)<0.25:
         board.digital_write(14,1)
+        responceReg[0] = 1
         print("Input pump on at LOW speed")
     elif 0.75<(volume/maxVolume)<0.9:
         board.digital_pin_write(16,1)
+        responceReg[2] = 1
         print("Output pump on at Low speed")
     elif 0.9<(volume/maxVolume)<1:
         board.digital_write(16,1)
         board.digital_write(17,1)
+        responceReg[2] = 1
+        responceReg[3] = 1
         print("Output pump on at High speed")
     elif (volume/maxVolume)>1:
         print(f"Volume is beyond max volume {maxVolume} mL")
@@ -124,12 +173,12 @@ def ultrasonic_ping():
 
 
 
-# graph_data function plots volume against time for the last 20 data points
+# graph_data_volume function plots volume against time for the last 20 data points
 # INPUTS: None
 # OUTPUTS: None (graph of data displayed)
 # Created by Matt
 # Date created: 05/09/2023
-def graph_data():
+def graph_data_volume():
     global timeGraph, volumeGraph
     plt.figure(1)
     plt.title("Volume against Time")
@@ -178,10 +227,11 @@ def main_menu():
 # Created by Matt
 # Date created: 05/09/2023
 def normal_operation():
-    global volumeGraph, timeGraph
+    global volumeGraph, timeGraph, originalTime
     print("====================================\nYou have entered Normal Operation Mode.\n====================================\ninput (ctrl + c) to return to the main menu\n====================================")
     try:
         while True:
+            originalTime = time.time()
             polling_loop()
     except KeyboardInterrupt:
         for pin in errorLights:
@@ -203,11 +253,11 @@ def data_observation():
     
     try:
         while True:
-            print("Please select an option from the following to observe data\n(1) Create a graph of 20 data points collected from normal mode\n(2) Display the last recorded volume\n(ctrl + c) Main Menu")
+            print("Please select an option from the following to observe data\n(1) Create a graph of 20 data points of volume collected from normal mode\n(2) Display the last recorded volume\n(3) Create a graph of 20 data points of volume collected from normal mode\n(2) Display the last recorded temperature\n(ctrl + c) Main Menu")
             analysisOption = input("Please provide input: ")
             if analysisOption == '1':
                 if len(volumeGraph) >20:
-                    graph_data()
+                    graph_data_volume()
                 else:
                     print("Not enough stored data")
             elif analysisOption == '2':
