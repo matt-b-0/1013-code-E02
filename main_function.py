@@ -20,7 +20,7 @@ maxVolume = 10000
 board = pymata4.Pymata4()
 board.set_sampling_interval(800)
 
-responceReg = ['LED_1_red','LED_2_red','LED_3_blue','LED_4_blue','LED_5_yellow','LED_6_RED','Buzzer_1','Buzzer_2','Buzer_3']
+responceReg = ['LED_1_red','LED_2_red','LED_3_blue','LED_4_blue','LED_5_yellow','LED_6_RED','Buzzer_1','Buzzer_2']
 responceReg = [0,0,0,0,0,0,0,0]
                                
 height = 0
@@ -89,10 +89,9 @@ def thermistor_read():
             change = T - temperatures[-2]
             print(change)
             if change > 0.5 or change < -0.5:
-                # Trigger some alert with leds or buzzer
-                board.digital_write(15, 1)
+                board.digital_write(17, 1)
             else:
-                board.digital_write(15, 0)
+                board.digital_write(17, 0)
             # Performing basic filtering
 
 # reactions function checks for volume level, turns on necessary warning LED and print statements of pump status
@@ -132,6 +131,7 @@ def reactions():
         print("Output pump on at High speed")
     elif (volume/maxVolume)>1:
         print(f"Volume is beyond max volume {maxVolume} mL")
+    
 
 
 
@@ -227,7 +227,7 @@ def main_menu():
 # Created by Matt
 # Date created: 05/09/2023
 def normal_operation():
-    global volumeGraph, timeGraph, originalTime
+    global volumeGraph, timeGraph, originalTime, responceReg
     print("====================================\nYou have entered Normal Operation Mode.\n====================================\ninput (ctrl + c) to return to the main menu\n====================================")
     try:
         while True:
@@ -237,6 +237,10 @@ def normal_operation():
         for pin in errorLights:
             board.set_pin_mode_digital_output(pin)
             board.digital_write(pin,0)
+        for i in range(8):
+            responceReg[i] = 0
+        rclk_temp = 1
+        rclk_temp = 0
         
         main_menu()
 
@@ -267,6 +271,10 @@ def data_observation():
                     seven_seg(outputMessage)
                 else:
                     print("Must record some data first")
+            elif analysisOption == '3':
+                #creates graph for temperature
+                if len(times)>20:
+                    graph_data_temp
             else:
                 print("Invalid option")
 
@@ -276,6 +284,16 @@ def data_observation():
             board.digital_write(digit, 1)
         main_menu()
 
+
+def graph_data_temp():
+    global times, temperatures
+    plt.figure(2)
+    plt.title("Temperature against Time")
+    yGraph = [times[_]-times[-20] for _ in range(-20,0)]
+    plt.plot(yGraph, [temperatures[_] for _ in range(-20,0)], linestyle = "--", marker = "o")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Volume (mL)")
+    plt.show()
 
 
 # When maintenance mode is chosen, asks user for PIN, if correct sends to settings adjustments, if incorrect returns to home screen
