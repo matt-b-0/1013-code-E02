@@ -18,7 +18,7 @@ pinLockout = 130
 maxHeight = 20
 maxVolume = 10000
 board = pymata4.Pymata4()
-board.set_sampling_interval(800)
+board.set_sampling_interval(1000)
 
 responceReg = ['LED_1_red','LED_2_red','LED_3_blue','LED_4_blue','LED_5_yellow','LED_6_RED','Buzzer_1','Buzzer_2']
 responceReg = [0,0,0,0,0,0,0,0]
@@ -42,6 +42,15 @@ temperatures = []
 times = []
 board.set_pin_mode_analog_input(0) #thermistor pin
 originalTime = 0
+
+serLED = 9
+srclkLED = 10
+rclkLED = 11
+loneBuzzer = 12
+board.set_pin_mode_digital_output(serLED)
+board.set_pin_mode_digital_output(srclkLED)
+board.set_pin_mode_digital_output(rclkLED)
+board.set_pin_mode_digital_output(loneBuzzer)
 
 
 
@@ -100,39 +109,54 @@ def thermistor_read():
 # Created by Matt
 # Date created: 05/09/2023
 def reactions():
-    global maxHeight, height, board, errorLights, baseSurfaceArea, maxVolume, volume
-    heightDif = (maxHeight - height)/maxHeight
+    global maxHeight, height, board, volume, maxVolume, responceReg, board
     #need to turn ser off to not visibly make adjustments
-    for pin in errorLights:
-            board.set_pin_mode_digital_output(pin)
-            board.digital_write(pin,0)
-            for i in range(8):
-                responceReg[i] = 0 #reset shift reg
-
+    
+    for i in range(8):
+        responceReg[i] = 0 #reset shift reg
+    #M2 responce LED's
     if (volume/maxVolume)<0.1:
-        board.digital_write(14,1)
-        board.digital_pin_write(15,1)
         responceReg[0] = 1
         responceReg[1] = 1
         print("Input pump on at HIGH speed")
     elif 0.1<(volume/maxVolume)<0.25:
-        board.digital_write(14,1)
         responceReg[0] = 1
         print("Input pump on at LOW speed")
     elif 0.75<(volume/maxVolume)<0.9:
-        board.digital_pin_write(16,1)
         responceReg[2] = 1
         print("Output pump on at Low speed")
     elif 0.9<(volume/maxVolume)<1:
-        board.digital_write(16,1)
-        board.digital_write(17,1)
         responceReg[2] = 1
         responceReg[3] = 1
         print("Output pump on at High speed")
     elif (volume/maxVolume)>1:
         print(f"Volume is beyond max volume {maxVolume} mL")
-    
+    write()
 
+
+#helper fucntion for the shift reg to write all the pins thagt are meant to turn on after a responce
+def write():
+    global responceReg, board
+    for i in responceReg:
+        board.digital_pin_write(serLED,i)
+        board.digital_pin_write(srclkLED,1)
+        time.sleep(0.1)
+        board.digital_pin_write(srclkLED,0)
+    board.digital_pin_write(rclkLED, 1)
+    time.sleep(0.1)
+    board.digital_pin_write(rclkLED,0)
+    time.sleep(0.1)
+
+def reset():
+    global board, serLED, srclkLED, rclkLED
+    board.digital_pin_write(serLED, 0)
+    for i in range(8):
+        board.digital_pin_write(srclkLED, 1)
+        time.sleep(0.01)
+        board.digital_pin_write(srclkLED, 0)
+    board.digital_pin_write(rclkLED, 1)
+    time.sleep(0.01)
+    board.digital_pin_write(rclkLED, 0)
 
 
 # data_clean function checks to see if last ultrasonic read involves a change of more than the rate-of-change-cutoff and 
@@ -227,20 +251,14 @@ def main_menu():
 # Created by Matt
 # Date created: 05/09/2023
 def normal_operation():
-    global volumeGraph, timeGraph, originalTime, responceReg
+    global volumeGraph, timeGraph, originalTime
     print("====================================\nYou have entered Normal Operation Mode.\n====================================\ninput (ctrl + c) to return to the main menu\n====================================")
     try:
         while True:
             originalTime = time.time()
             polling_loop()
     except KeyboardInterrupt:
-        for pin in errorLights:
-            board.set_pin_mode_digital_output(pin)
-            board.digital_write(pin,0)
-        for i in range(8):
-            responceReg[i] = 0
-        rclk_temp = 1
-        rclk_temp = 0
+        reset()
         
         main_menu()
 
