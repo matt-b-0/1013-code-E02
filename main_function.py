@@ -30,7 +30,7 @@ rateChange = []
 rateOfChangeCutoff = 2000 #mL/s
 baseSurfaceArea = 24*24
 timeAdd = True
-errorLights = [14,15,16,17]
+changeCount = 0
 
 #definition of things for the thermistor
 thermistor = 0
@@ -42,16 +42,24 @@ temperatures = []
 times = []
 board.set_pin_mode_analog_input(0) #thermistor pin
 originalTime = 0
+T=0
 
 serLED = 9
 srclkLED = 10
 rclkLED = 11
-loneBuzzer = 12
+buzzer1= 12
+buzzer2 = 13
+buzzer3 = 14
 board.set_pin_mode_digital_output(serLED)
 board.set_pin_mode_digital_output(srclkLED)
 board.set_pin_mode_digital_output(rclkLED)
-board.set_pin_mode_digital_output(loneBuzzer)
-board.digital_pin_write(loneBuzzer, 0)
+board.set_pin_mode_digital_output(buzzer1)
+board.set_pin_mode_digital_output(buzzer2)
+board.set_pin_mode_digital_output(buzzer3)
+pushButton = 15
+board.set_pin_mode_digital_input(pushButton)
+
+
 
 
 
@@ -77,14 +85,13 @@ def polling_loop():
     if timeAdd:
         timeGraph.append(time.time())
     print(f'Runtime = {runTime}')
-
+    
 #thermistor read and record
 #inputs: None()
 def thermistor_read():
-    global originalTime, c1, c2, c3, R1, temperatures, times
-    board.set_pin_mode_analog_input(0)
-    board.set_pin_mode_digital_output(17)
-    v0 = board.analog_read(0)[0]
+    global originalTime, c1, c2, c3, R1, temperatures, times, T
+    board.set_pin_mode_analog_input(5)
+    v0 = board.analog_read(5)[0]
 
     if v0 > 0:
         R2 = R1 * (1023.0 / float(v0) - 1.0)
@@ -98,10 +105,8 @@ def thermistor_read():
         if len(temperatures) > 1:
             change = T - temperatures[-2]
             print(change)
-            if change > 0.5 or change < -0.5:
-                board.digital_write(17, 1)
-            else:
-                board.digital_write(17, 0)
+            #if change > 0.5 or change < -0.5:
+            #else:
             # Performing basic filtering
 
 # reactions function checks for volume level, turns on necessary warning LED and print statements of pump status
@@ -110,11 +115,12 @@ def thermistor_read():
 # Created by Matt
 # Date created: 05/09/2023
 def reactions():
-    global maxHeight, height, board, volume, maxVolume, responceReg, board
+    global maxHeight, height, board, volume, maxVolume, responceReg, board, changeCount
     #need to turn ser off to not visibly make adjustments
     
     for i in range(8):
         responceReg[i] = 0 #reset shift reg
+        board.digital_pin_write(buzzer3, 0)
     #M2 responce LED's
     if (volume/maxVolume)<0.1:
         responceReg[0] = 1
@@ -122,6 +128,7 @@ def reactions():
         print("Input pump on at HIGH speed")
     elif 0.1<(volume/maxVolume)<0.25:
         responceReg[0] = 1
+        board.digital_pin_write(buzzer3, 1)
         print("Input pump on at LOW speed")
     elif 0.75<(volume/maxVolume)<0.9:
         responceReg[2] = 1
@@ -132,6 +139,19 @@ def reactions():
         print("Output pump on at High speed")
     elif (volume/maxVolume)>1:
         print(f"Volume is beyond max volume {maxVolume} mL")
+    
+    if T>25:
+        responceReg[4] = 1
+    
+    if (volume/maxVolume)>0.75 or (volume/maxVolume)<0.25:
+        if changeCount >=5:
+            board.digital_pin_write(buzzer1, 1)
+        else:
+            changeCount +=1
+    else:
+        changeCount = 0
+        board.digital_pin_write(buzzer1, 0)
+
     write()
 
 
@@ -141,22 +161,22 @@ def write():
     for i in responceReg:
         board.digital_pin_write(serLED,i)
         board.digital_pin_write(srclkLED,1)
-        time.sleep(0.1)
+        time.sleep(0.001)
         board.digital_pin_write(srclkLED,0)
     board.digital_pin_write(rclkLED, 1)
-    time.sleep(0.1)
+    time.sleep(0.001)
     board.digital_pin_write(rclkLED,0)
-    time.sleep(0.1)
+    time.sleep(0.001)
 
 def reset():
     global board, serLED, srclkLED, rclkLED
     board.digital_pin_write(serLED, 0)
     for i in range(8):
         board.digital_pin_write(srclkLED, 1)
-        time.sleep(0.01)
+        time.sleep(0.001)
         board.digital_pin_write(srclkLED, 0)
     board.digital_pin_write(rclkLED, 1)
-    time.sleep(0.01)
+    time.sleep(0.001)
     board.digital_pin_write(rclkLED, 0)
 
 
@@ -173,9 +193,9 @@ def data_clean():
         if abs(volumeGraph[-1] - volume) < rateOfChangeCutoff and volume>=0:
             volumeGraph.append(volume)
             timeAdd = True
-            responceReg[4] = 0
+            board.digital_pin_write(buzzer2, 0)
         else:
-            responceReg[4] = 1
+            board.digital_pin_write(buzzer2, 1)
             print("Error in rate of change: data removed")
             timeAdd = False
     else:
@@ -192,8 +212,8 @@ def data_clean():
 def ultrasonic_ping():
     global board, volume, height
     calcHeight = 22
-    board.set_pin_mode_sonar(18,19,timeout=200000)
-    measure = board.sonar_read(18)
+    board.set_pin_mode_sonar(16,17,timeout=200000)
+    measure = board.sonar_read(16)
     height = calcHeight - measure[0]
     print(f'Height = {height}cm')
     volume = height * baseSurfaceArea #gets volume of water in ml
@@ -262,6 +282,10 @@ def normal_operation():
             polling_loop()
     except KeyboardInterrupt:
         reset()
+        board.digital_pin_write(buzzer1, 0)
+        board.digital_pin_write(buzzer2, 0)
+        board.digital_pin_write(buzzer3, 0)
+
         
         main_menu()
 
