@@ -482,7 +482,7 @@ def main_menu_exit():
 # Created by Matt
 # Date created: 11/10/2023
 def seven_seg(string):
-     dictionary = {
+    dictionary = {
     "0": [0, 1, 1, 1, 1, 1, 0, 1],
     "1": [0, 1, 1, 0, 0, 0, 0, 0],
     "2": [0, 1, 0, 1, 1, 0, 1, 1],
@@ -520,61 +520,63 @@ def seven_seg(string):
     "Y": [0, 1, 1, 1, 0, 1, 1, 0],
     "Z": [0, 1, 0, 1, 1, 0, 1, 1],
     "_": [0, 0, 0, 0, 0, 0, 0, 0]
-}
-ser = 6
-rclk = 7
-srclk = 8
-digits = [2, 3, 4, 5]
+    }
+    ser = 6
+    rclk = 7
+    srclk = 8
+    digits = [2, 3, 4, 5]
 
-# Setting up board including making pins outputs and setting ser, rclk, and srclk to zero
-board.set_pin_mode_digital_output(ser)
-board.set_pin_mode_digital_output(rclk)
-board.set_pin_mode_digital_output(srclk)
-for dig in digits:
-    # Set all pins to digital outputs
-    board.set_pin_mode_digital_output(dig)
-    # Need to set all seven seg digits to 1 as they are negatively switched
-    board.digital_write(dig, 1)
-# Reset shift register
-board.digital_write(ser, 0)
-board.digital_write(rclk, 0)
-board.digital_write(srclk, 0)
+    # Setting up board including making pins outputs and setting ser, rclk, and srclk to zero
+    board.set_pin_mode_digital_output(ser)
+    board.set_pin_mode_digital_output(rclk)
+    board.set_pin_mode_digital_output(srclk)
+    for dig in digits:
+        # Set all pins to digital outputs
+        board.set_pin_mode_digital_output(dig)
+        # Need to set all seven seg digits to 1 as they are negatively switched
+        board.digital_write(dig, 1)
+    # Reset shift register
+    board.digital_write(ser, 0)
+    board.digital_write(rclk, 0)
+    board.digital_write(srclk, 0)
 
-# Ensure input is a string
-string = str(string)
-# Add boundaries either side so it starts off screen then scrolls on
-string = "____" + string + "____"
+    # Ensure input is a string
+    string = str(string)
+    # Add boundaries either side so it starts off screen then scrolls on
+    string = "____" + string + "____"
 
-while True:
-    # set constant to 5 as that is pin of 4th digit
-    i = 5
-    # Loop through a character 10 times before moving up
-    for _ in range(10):
-        for char in string:
-            # Find the binary conversion for a character
-            binary = dictionary[char.upper()]
-            # Reverse the binary
-            binary = binary[::-1]
-            for val in binary:
-                # Write to each shift register element
-                board.digital_write(ser, val)
-                board.digital_write(srclk, 1)
-                time.sleep(0.00005)
-                # This shits the shift register up
-                board.digital_write(srclk, 0)
-                board.digital_write(rclk, 1)
-                time.sleep(0.0005)
-                board.digital_write(rclk, 0)
-                time.sleep(0.0005)
-            # Writes to a specific digit depending on i
-            board.digital_write(i, 0)
-            time.sleep(0.000005)
-            board.digital_write(i, 1)
-            time.sleep(0.000005)
-            # Do i - 1 so it does the next digit
-            i -= 1
-        # Reset to 5 so that it shifts everything up
+    while True:
+        # set constant to 5 as that is pin of 4th digit
         i = 5
-    time.sleep(0.00005)
-    # Delete the first element of the string as it gets flows across
-    string = string[1:len(string)]
+        # Loop through a character 10 times before moving up
+        for _ in range(10):
+            for char in string:
+                # Find the binary conversion for a character
+                binary = dictionary[char.upper()]
+                # Reverse the binary
+                binary = binary[::-1]
+                for val in binary:
+                    # Write to each shift register element
+                    board.digital_write(ser, val)
+                    board.digital_write(srclk, 1)
+                    time.sleep(0.00005)
+                    # This shits the shift register up
+                    board.digital_write(srclk, 0)
+                    board.digital_write(rclk, 1)
+                    time.sleep(0.0005)
+                    board.digital_write(rclk, 0)
+                    time.sleep(0.0005)
+                # Writes to a specific digit depending on i
+                board.digital_write(i, 0)
+                time.sleep(0.000005)
+                board.digital_write(i, 1)
+                time.sleep(0.000005)
+                # Do i - 1 so it does the next digit
+                i -= 1
+            # Reset to 5 so that it shifts everything up
+            i = 5
+        time.sleep(0.00005)
+        # Delete the first element of the string as it gets flows across
+        string = string[1:len(string)]
+
+main_menu()
