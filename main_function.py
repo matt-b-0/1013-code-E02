@@ -1,8 +1,8 @@
 #main function file that contains all of the code for a water tank monitoring system
 #Team: E02
 #Members: Sam Potter, Matthew Brasacchio, Noah Clark, Kush Berry, Yousouf Palitanawala
-#last edited 15/09/2023
-#version 1.2.7
+#last edited 13/10/2023
+#version 1.2.8
 
 # Setup
 import time 
@@ -20,8 +20,8 @@ maxVolume = 10000
 board = pymata4.Pymata4()
 board.set_sampling_interval(1000)
 
-responceReg = ['LED_1_red','LED_2_red','LED_3_blue','LED_4_blue','LED_5_yellow','LED_6_RED','Buzzer_1','Buzzer_2']
-responceReg = [0,0,0,0,0,0,0,0]
+responseReg = ['LED_1_red','LED_2_red','LED_3_blue','LED_4_blue','LED_5_yellow','LED_6_RED','Buzzer_1','Buzzer_2']
+responseReg = [0,0,0,0,0,0,0,0]
                                
 height = 0
 volumeGraph = []
@@ -42,8 +42,8 @@ temperatures = []
 times = []
 board.set_pin_mode_analog_input(0) #thermistor pin
 originalTime = 0
-T=0
-
+temperature=0
+#variable pins and setup
 serLED = 9
 srclkLED = 10
 rclkLED = 11
@@ -66,7 +66,7 @@ luxLED = False
 
 
 
-# polling_loop function calls various other functions, every 1.5 seconds
+# polling_loop function calls various other functions, every 0.7 seconds
 # INPUTS: None (timeAdd as a global variable)
 # OUTPUTS: None
 # Created by Matt
@@ -90,33 +90,38 @@ def polling_loop():
         timeGraph.append(time.time())
     print(f'Runtime = {runTime}')
     
-#thermistor read and record
-#inputs: None()
+# reads temperature from the thermistor
+# INPUTS: None (originalTime, c1, c2, c3, R1, temperatures, times, temperatures as a global variables)
+# OUTPUTS: None
+# Created by Matt
+# Date created: 11/10/2023
 def thermistor_read():
-    global originalTime, c1, c2, c3, R1, temperatures, times, T
+    global originalTime, c1, c2, c3, R1, temperatures, times, temperature
     board.set_pin_mode_analog_input(5)
     v0 = board.analog_read(5)[0]
 
     if v0 > 0:
         R2 = R1 * (1023.0 / float(v0) - 1.0)
         logR2 = math.log(R2)
-        T = (1.0 / (c1 + c2 * logR2 + c3 * logR2 * logR2 * logR2))
-        T = T - 273.15
-        print(T)
-        if T > 0 or T < 100:
-            temperatures.append(T)
+        temperature = (1.0 / (c1 + c2 * logR2 + c3 * logR2 * logR2 * logR2))
+        temperature = temperature - 273.15
+        print(f"Temperature: {temperature} C")
+        if temperature > 0 or temperature < 100:
+            temperatures.append(temperature)
             times.append(time.time() - originalTime)
         if len(temperatures) > 1:
-            change = T - temperatures[-2]
-            print(change)
-            #if change > 0.5 or change < -0.5:
-            #else:
-            # Performing basic filtering
+            change = temperature - temperatures[-2]
+            print(f"Temperature Change: {change}")
 
+# reads light value using a light dependent resisitor, to determine if there are cracks in the tank
+# INPUTS: None 
+# OUTPUTS: None (sets current lux as a global variable)
+# Created by Sam
+# Date created: 12/10/2023
 def LDR_read():
     global LDR, luxLED, board
     lux = board.analog_read(LDR)[0]
-    if lux >100:
+    if lux > 100:
         luxLED = True
     else:
         False
@@ -128,40 +133,40 @@ def LDR_read():
 # Created by Matt
 # Date created: 05/09/2023
 def reactions():
-    global maxHeight, height, board, volume, maxVolume, responceReg, board, changeCount, T,LDR
+    global maxHeight, height, board, volume, maxVolume, responseReg, board, changeCount, temperature ,LDR
     #need to turn ser off to not visibly make adjustments
     
     for i in range(8):
-        responceReg[i] = 0 #reset shift reg
+        responseReg[i] = 0 #reset shift reg
         board.digital_pin_write(buzzer3, 0)
-    #M2 responce LED's
+    #M2 response LED's
     if (volume/maxVolume)<0.1:
-        responceReg[0] = 1
-        responceReg[1] = 1
+        responseReg[0] = 1
+        responseReg[1] = 1
         print("Input pump on at HIGH speed")
     elif 0.1<(volume/maxVolume)<0.25:
-        responceReg[0] = 1
+        responseReg[0] = 1
         board.digital_pin_write(buzzer3, 1)
         print("Input pump on at LOW speed")
     elif 0.75<(volume/maxVolume)<0.9:
-        responceReg[2] = 1
+        responseReg[2] = 1
         print("Output pump on at Low speed")
     elif 0.9<(volume/maxVolume)<1:
-        responceReg[2] = 1
-        responceReg[3] = 1
+        responseReg[2] = 1
+        responseReg[3] = 1
         print("Output pump on at High speed")
     elif (volume/maxVolume)>1:
         print(f"Volume is beyond max volume {maxVolume} mL")
     
-    if T>25:
-        responceReg[4] = 1
+    if temperature>25:
+        responseReg[4] = 1
     else:
-        responceReg[4] = 0
+        responseReg[4] = 0
 
     if luxLED:
-        responceReg[5] = 1
+        responseReg[5] = 1
     else:
-        responceReg[5] = 1
+        responseReg[5] = 1
     
     if (volume/maxVolume)>0.75 or (volume/maxVolume)<0.25:
         if changeCount >=5:
@@ -175,10 +180,14 @@ def reactions():
     write()
 
 
-#helper fucntion for the shift reg to write all the pins thagt are meant to turn on after a responce
+# function for the shift register to write all the pins that are meant to turn on after a response
+# INPUTS: None 
+# OUTPUTS: None
+# Created by Matt
+# Date created: 11/10/2023
 def write():
-    global responceReg, board
-    for i in responceReg:
+    global responseReg, board
+    for i in responseReg:
         board.digital_pin_write(serLED,i)
         board.digital_pin_write(srclkLED,1)
         time.sleep(0.001)
@@ -188,6 +197,12 @@ def write():
     board.digital_pin_write(rclkLED,0)
     time.sleep(0.001)
 
+# reset function removes all changes to the shift register and sets it to its original state, 
+# turning all the LEDs off
+# INPUTS: None 
+# OUTPUTS: None
+# Created by Matt
+# Date created: 11/10/2023
 def reset():
     global board, serLED, srclkLED, rclkLED
     board.digital_pin_write(serLED, 0)
@@ -289,8 +304,9 @@ def main_menu():
 
 
 # When normal mode is chosen, run the polling loop until keyboard is interrupted
+# when keyboard interrupt is entered, sound the buzzers and reset the LEDs
 # INPUTS: None
-# OUTPUTS: None (volume and height of water as global variables)
+# OUTPUTS: None 
 # Created by Matt
 # Date created: 05/09/2023
 def normal_operation():
@@ -355,7 +371,11 @@ def data_observation():
             board.digital_write(digit, 1)
         main_menu()
 
-
+# function to graph the available temperature data over time
+# INPUTS: None 
+# OUTPUTS: None (graph of temperature)
+# Created by Matt
+# Date created: 11/10/2023
 def graph_data_temp():
     global times, temperatures
     plt.figure(2)
@@ -421,7 +441,7 @@ def adjustments():
     print("====================================\nYou have entered maintenance mode.\n====================================")
     try:
         while True:
-            print(f"(1) Change current pin: {pin}\n(2) Edit maximum voume from {maxVolume}mL")
+            print(f"(1) Change current pin: {pin}\n(2) Edit maximum volume from {maxVolume}mL")
             option = input("Please enter your selection or enter ctrl+c to exit to main menu: ")
             if time.time()-start_time >=120:
                 print(f"YOU HAVE TIMED OUT\nTo make more changes enter maintainence again\npin = {pin}\nMaximum volume = {maxVolume}mL")
@@ -444,16 +464,23 @@ def adjustments():
     except KeyboardInterrupt:
         print(f"pin = {pin}\nMaximum volume = {maxVolume}mL")
         main_menu()
-#main menu function that moves user back to the main menu
-#inputs None
-#outputs None
+# function to send user back to the main menu
+# INPUTS: None 
+# OUTPUTS: None
+# Created by Noah
+# Date created: 11/10/2023
 def main_menu_exit():
-    print("exiting to main menu")
+    print("Exiting to main menu...")
     for _ in range(5,0,-1):
         print(_)
         time.sleep(1)
     main_menu()
 
+#function to print numbers and letters to the to the seven segment display
+# INPUTS: string
+# OUTPUTS: None 
+# Created by Matt
+# Date created: 11/10/2023
 def seven_seg(string):
     dictionary = {
     "0": [0, 1, 1, 1, 1, 1, 0, 1],
@@ -494,7 +521,7 @@ def seven_seg(string):
     "Z": [0, 1, 0, 1, 1, 0, 1, 1],
     "_": [0, 0, 0, 0, 0, 0, 0, 0]
     }   
-
+# set pins that correspond to the shift register
     ser = 6
     rclk = 7
     srclk = 8
@@ -513,7 +540,7 @@ def seven_seg(string):
     string = str(string)
     string = "____" + string + "____"
     
-
+# light up the suitable segments to display input, using the shift register
     while True:
         i = 5
         for _ in range(10):
@@ -540,5 +567,3 @@ def seven_seg(string):
 
 
 main_menu()
-
-
