@@ -166,13 +166,15 @@ def reset():
 # Created by Matt
 # Date created: 05/09/2023
 def data_clean():
-    global volume, volumeGraph, timeGraph, rateOfChangeCutoff, timeAdd
+    global volume, volumeGraph, timeGraph, rateOfChangeCutoff, timeAdd, board
 
     if len(timeGraph) > 1:
         if abs(volumeGraph[-1] - volume) < rateOfChangeCutoff and volume>=0:
             volumeGraph.append(volume)
             timeAdd = True
+            responceReg[4] = 0
         else:
+            responceReg[4] = 1
             print("Error in rate of change: data removed")
             timeAdd = False
     else:
