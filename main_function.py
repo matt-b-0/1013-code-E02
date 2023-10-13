@@ -50,14 +50,17 @@ rclkLED = 11
 buzzer1= 12
 buzzer2 = 13
 buzzer3 = 14
+LDR = 4
 board.set_pin_mode_digital_output(serLED)
 board.set_pin_mode_digital_output(srclkLED)
 board.set_pin_mode_digital_output(rclkLED)
 board.set_pin_mode_digital_output(buzzer1)
 board.set_pin_mode_digital_output(buzzer2)
 board.set_pin_mode_digital_output(buzzer3)
+board.set_pin_mode_analog_input(LDR)
 pushButton = 15
 board.set_pin_mode_digital_input(pushButton)
+luxLED = False
 
 
 
@@ -74,12 +77,13 @@ def polling_loop():
     startTime = time.time()
     ultrasonic_ping()
     thermistor_read()
+
     print(f"Volume = {volume}mL")#print(volume) mL
 
     data_clean()
     if timeAdd:
         reactions()
-    time.sleep(0.8)
+    time.sleep(0.7)
     endTime = time.time()
     runTime = endTime - startTime
     if timeAdd:
@@ -109,13 +113,22 @@ def thermistor_read():
             #else:
             # Performing basic filtering
 
+def LDR_read():
+    global LDR, luxLED, board
+    lux = board.analog_read(LDR)[0]
+    if lux >100:
+        luxLED = True
+    else:
+        False
+
+
 # reactions function checks for volume level, turns on necessary warning LED and print statements of pump status
 # INPUTS: NONE (volume, maxVolume errorLights, baseSurfaceArea as global variables)
 # OUTPUTS: NONE
 # Created by Matt
 # Date created: 05/09/2023
 def reactions():
-    global maxHeight, height, board, volume, maxVolume, responceReg, board, changeCount
+    global maxHeight, height, board, volume, maxVolume, responceReg, board, changeCount, T,LDR
     #need to turn ser off to not visibly make adjustments
     
     for i in range(8):
@@ -142,6 +155,13 @@ def reactions():
     
     if T>25:
         responceReg[4] = 1
+    else:
+        responceReg[4] = 0
+
+    if luxLED:
+        responceReg[5] = 1
+    else:
+        responceReg[5] = 1
     
     if (volume/maxVolume)>0.75 or (volume/maxVolume)<0.25:
         if changeCount >=5:
@@ -274,10 +294,17 @@ def main_menu():
 # Created by Matt
 # Date created: 05/09/2023
 def normal_operation():
-    global volumeGraph, timeGraph, originalTime
+    global volumeGraph, timeGraph, originalTime, pushButton
     print("====================================\nYou have entered Normal Operation Mode.\n====================================\ninput (ctrl + c) to return to the main menu\n====================================")
     try:
         while True:
+            if board.digital_read(pushButton)[0] ==1:
+                reset()
+                board.digital_pin_write(buzzer1, 0)
+                board.digital_pin_write(buzzer2, 0)
+                board.digital_pin_write(buzzer3, 0)
+                main_menu()
+
             originalTime = time.time()
             polling_loop()
     except KeyboardInterrupt:
@@ -286,7 +313,6 @@ def normal_operation():
         board.digital_pin_write(buzzer2, 0)
         board.digital_pin_write(buzzer3, 0)
 
-        
         main_menu()
 
 
