@@ -51,6 +51,7 @@ board.set_pin_mode_digital_output(serLED)
 board.set_pin_mode_digital_output(srclkLED)
 board.set_pin_mode_digital_output(rclkLED)
 board.set_pin_mode_digital_output(loneBuzzer)
+board.digital_pin_write(loneBuzzer, 0)
 
 
 
@@ -404,73 +405,88 @@ def main_menu_exit():
     main_menu()
 
 def seven_seg(string):
-    pins = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-    digits = [7, 9, 10, 13] # Digits 1-4
-    seg = [12, 8, 5, 4, 3, 11, 6] # Segments a - g
-
-    while len(string) <4:
-        string = '_' + string
-
     dictionary = {
-        "0": [1, 1, 1, 1, 1, 1, 0],
-        "1": [0, 1, 1, 0, 0, 0, 0],
-        "2": [1, 1, 0, 1, 1, 0, 1],
-        "3": [1, 1, 1, 1, 0, 0, 1],
-        "4": [0, 1, 1, 0, 0, 1, 1],
-        "5": [1, 0, 1, 1, 0, 1, 1],
-        "6": [1, 0, 1, 1, 1, 1, 1],
-        "7": [1, 1, 1, 0, 0, 0, 0],
-        "8": [1, 1, 1, 1, 1, 1, 1],
-        "9": [1, 1, 1, 1, 0, 1, 1],
-        "A": [1, 1, 1, 0, 1, 1, 1],
-        "B": [0, 0, 1, 1, 1, 1, 1],
-        "C": [1, 0, 0, 1, 1, 1, 0],
-        "D": [0, 1, 1, 1, 1, 0, 1],
-        "E": [1, 0, 0, 1, 1, 1, 1],
-        "F": [1, 0, 0, 0, 1, 1, 1],
-        "G": [1, 0, 1, 1, 1, 1, 0],
-        "H": [0, 1, 1, 0, 1, 1, 1],
-        "I": [0, 0, 0, 0, 1, 1, 0],
-        "J": [0, 1, 1, 1, 0, 0, 0],
-        "K": [0, 1, 1, 0, 1, 1, 1],
-        "L": [0, 0, 0, 1, 1, 1, 0],
-        "M": [1, 0, 1, 0, 1, 0, 1],
-        "N": [0, 0, 1, 0, 1, 0, 1],
-        "O": [1, 1, 1, 1, 1, 1, 0],
-        "P": [1, 1, 0, 0, 1, 1, 1],
-        "Q": [1, 1, 1, 0, 0, 1, 1],
-        "R": [0, 0, 0, 0, 1, 0, 1],
-        "S": [1, 0, 1, 1, 0, 1, 1],
-        "T": [0, 0, 0, 1, 1, 1, 1],
-        "U": [0, 1, 1, 1, 1, 1, 0],
-        "V": [0, 1, 1, 1, 1, 1, 0],
-        "W": [0, 1, 1, 1, 1, 1, 0],
-        "X": [0, 1, 1, 0, 1, 1, 1],
-        "Y": [0, 1, 1, 1, 0, 1, 1],
-        "Z": [1, 1, 0, 1, 1, 0, 1],
-        "_": [0, 0, 0, 0, 0, 0, 0]
-    }
-    for pin in pins:
-        board.set_pin_mode_digital_output(pin)
+    "0": [0, 1, 1, 1, 1, 1, 0, 1],
+    "1": [0, 1, 1, 0, 0, 0, 0, 0],
+    "2": [0, 1, 0, 1, 1, 0, 1, 1],
+    "3": [0, 1, 1, 1, 0, 0, 1, 1],
+    "4": [0, 1, 1, 0, 0, 1, 1, 0],
+    "5": [0, 0, 1, 1, 0, 1, 1, 1],
+    "6": [0, 0, 1, 1, 1, 1, 1, 1],
+    "7": [0, 1, 1, 0, 0, 0, 0, 1],
+    "8": [0, 1, 1, 1, 1, 1, 1, 1],
+    "9": [0, 1, 1, 1, 0, 1, 1, 1],
+    "A": [0, 1, 1, 0, 1, 1, 1, 1],
+    "B": [0, 0, 1, 1, 1, 1, 1, 0],
+    "C": [0, 0, 0, 1, 1, 1, 0, 1],
+    "D": [0, 1, 1, 1, 1, 0, 1, 0],
+    "E": [0, 0, 0, 1, 1, 1, 1, 1],
+    "F": [0, 0, 0, 0, 1, 1, 1, 1],
+    "G": [0, 0, 1, 1, 1, 1, 0, 1],
+    "H": [0, 1, 1, 0, 1, 1, 1, 0],
+    "I": [0, 0, 0, 0, 1, 1, 0, 0],
+    "J": [0, 1, 1, 1, 0, 0, 0, 0],
+    "K": [0, 1, 1, 0, 1, 1, 1, 0],
+    "L": [0, 0, 0, 1, 1, 1, 0, 0],
+    "M": [0, 0, 1, 0, 1, 0, 1, 1],
+    "N": [0, 0, 1, 0, 1, 0, 1, 0],
+    "O": [0, 1, 1, 1, 1, 1, 0, 1],
+    "P": [0, 1, 0, 0, 1, 1, 1, 1],
+    "Q": [0, 1, 1, 0, 0, 1, 1, 1],
+    "R": [0, 0, 0, 0, 1, 0, 1, 0],
+    "S": [0, 0, 1, 1, 0, 1, 1, 1],
+    "T": [0, 0, 0, 1, 1, 1, 1, 0],
+    "U": [0, 1, 1, 1, 1, 1, 0, 0],
+    "V": [0, 1, 1, 1, 1, 1, 0, 0],
+    "W": [0, 1, 1, 1, 1, 1, 0, 0],
+    "X": [0, 1, 1, 0, 1, 1, 1, 0],
+    "Y": [0, 1, 1, 1, 0, 1, 1, 0],
+    "Z": [0, 1, 0, 1, 1, 0, 1, 1],
+    "_": [0, 0, 0, 0, 0, 0, 0, 0]
+    }   
 
-    for digit in digits:
-        board.digital_write(digit, 1)
+    ser = 6
+    rclk = 7
+    srclk = 8
 
-    # Convert input to string
+    digits = [2, 3, 4, 5]
+    board.set_pin_mode_digital_output(ser)
+    board.set_pin_mode_digital_output(rclk)
+    board.set_pin_mode_digital_output(srclk)
+    for dig in digits:
+        board.set_pin_mode_digital_output(dig)
+        board.digital_write(dig, 1)
+    board.digital_write(ser, 0)
+    board.digital_write(rclk, 0)
+    board.digital_write(srclk, 0)
+
     string = str(string)
-    numbers = []
-    for char in string:
-        sequence = dictionary[char.upper()]
-        numbers.append(sequence)
-    while True:
-        for n in range(len(digits)):
-            board.digital_write(digits[n], 0)  # Turn on the current digit
-            for i in range(len(seg)):
-                board.digital_write(seg[i], numbers[n][i])  # Write the segment value
-                time.sleep(0.0001)  # Delay for segment display
-                board.digital_write(seg[i], 0)  # Turn off the current segment
-            board.digital_write(digits[n], 1) # Turn off the current digit
+    string = "____" + string + "____"
+    
 
+    while True:
+        i = 5
+        for _ in range(10):
+            for char in string:
+                binary = dictionary[char.upper()]
+                binary = binary[::-1]
+                for val in binary:
+                    board.digital_write(ser, val)
+                    board.digital_write(srclk, 1)
+                    time.sleep(0.00005)
+                    board.digital_write(srclk, 0)
+                    board.digital_write(rclk, 1)
+                    time.sleep(0.0005)
+                    board.digital_write(rclk, 0)
+                    time.sleep(0.0005)
+                board.digital_write(i, 0)
+                time.sleep(0.000005)
+                board.digital_write(i, 1)
+                time.sleep(0.000005)
+                i -= 1
+            i = 5
+        time.sleep(0.00005)
+        string = string[1:len(string)]
 
 
 main_menu()
