@@ -77,6 +77,7 @@ def polling_loop():
     startTime = time.time()
     ultrasonic_ping()
     thermistor_read()
+    LDR_read()
 
     print(f"Volume = {volume}mL")#print(volume) mL
 
@@ -133,7 +134,7 @@ def LDR_read():
 # Created by Matt
 # Date created: 05/09/2023
 def reactions():
-    global maxHeight, height, board, volume, maxVolume, responseReg, board, changeCount, temperature ,LDR
+    global maxHeight, height, board, volume, maxVolume, responseReg, board, changeCount, temperature ,LDR, luxLED
     #need to turn ser off to not visibly make adjustments
     
     for i in range(8):
@@ -299,6 +300,7 @@ def main_menu():
             else:
                 print("Invalid input")
     except KeyboardInterrupt:
+        board.shutdown()
         exit(0)
 
 
@@ -361,12 +363,12 @@ def data_observation():
             elif analysisOption == '3':
                 #creates graph for temperature
                 if len(times)>20:
-                    graph_data_temp
+                    graph_data_temp()
             else:
                 print("Invalid option")
 
     except KeyboardInterrupt:
-        digits = [7, 9, 10, 13] # Digits 1-4
+        digits = [2, 3, 4, 5] # Digits 1-4
         for digit in digits:
             board.digital_write(digit, 1)
         main_menu()
