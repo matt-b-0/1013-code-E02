@@ -142,7 +142,7 @@ def LDR_read():
 # Created by Matt
 # Date created: 05/09/2023
 def reactions():
-    global maxHeight, height, board, volume, maxVolume, responseReg, board, changeCount, temperature ,LDR, luxLED
+    global maxHeight, height, board, volume, maxVolume, responseReg, board, changeCount, temperature, luxLED, temp_LED
     #need to turn ser off to not visibly make adjustments
     
     for i in range(8):
@@ -379,6 +379,8 @@ def data_observation():
                 #creates graph for temperature
                 if len(times)>20:
                     graph_data_temp()
+                else:
+                    print("more data recquired")
             else:
                 print("Invalid option")
 
@@ -400,7 +402,7 @@ def graph_data_temp():
     yGraph = [times[_]-times[-20] for _ in range(-20,0)]
     plt.plot(yGraph, [temperatures[_] for _ in range(-20,0)], linestyle = "--", marker = "o")
     plt.xlabel("Time (s)")
-    plt.ylabel("Volume (mL)")
+    plt.ylabel("tempertaure (degrees)")
     plt.show()
 
 
