@@ -152,10 +152,11 @@ def reactions():
     if (volume/maxVolume)<0.1:
         responseReg[0] = 1
         responseReg[1] = 1
+        board.digital_pin_write(buzzer3, 1)
+
         print("Input pump on at HIGH speed")
     elif 0.1<(volume/maxVolume)<0.25:
         responseReg[0] = 1
-        board.digital_pin_write(buzzer3, 1)
         print("Input pump on at LOW speed")
     elif 0.75<(volume/maxVolume)<0.9:
         responseReg[2] = 1
@@ -242,7 +243,11 @@ def data_clean():
             board.digital_pin_write(buzzer2, 0)
         else:
             board.digital_pin_write(buzzer2, 1)
-            print("Error in rate of change: data removed")
+            if (volumeGraph[-1] - volume) <0:
+                print("Error in rate of change: data removed RAPID INCREASE")
+            else:
+                print("Error in rate of change: data removed RAPID DECREASE")
+
             timeAdd = False
     else:
         volumeGraph.append(volume)
@@ -356,7 +361,7 @@ def data_observation():
     
     try:
         while True:
-            print("Please select an option from the following to observe data\n(1) Create a graph of 20 data points of volume collected from normal mode\n(2) Display the last recorded volume\n(3) Create a graph of 20 data points of volume collected from normal mode\n(2) Display the last recorded temperature\n(ctrl + c) Main Menu")
+            print("Please select an option from the following to observe data\n(1) Create a graph of 20 data points of volume collected from normal mode\n(2) Display the last recorded volume\n(3) Create a graph of 20 data points of temperature collected from normal mode\n(ctrl + c) Main Menu")
             analysisOption = input("Please provide input: ")
             if analysisOption == '1':
                 if len(volumeGraph) >20:
@@ -574,10 +579,10 @@ def seven_seg(string):
                     time.sleep(0.00005)
                     # This shits the shift register up
                     board.digital_write(srclk, 0)
-                    board.digital_write(rclk, 1)
-                    time.sleep(0.0005)
-                    board.digital_write(rclk, 0)
-                    time.sleep(0.0005)
+                board.digital_write(rclk, 1)
+                time.sleep(0.0005)
+                board.digital_write(rclk, 0)
+                time.sleep(0.0005)
                 # Writes to a specific digit depending on i
                 board.digital_write(i, 0)
                 time.sleep(0.000005)
