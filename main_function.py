@@ -284,6 +284,7 @@ def graph_data_volume():
     plt.plot(yGraph, [volumeGraph[_] for _ in range(-20,0)], linestyle = "--", marker = "o")
     plt.xlabel("Time (s)")
     plt.ylabel("Volume (mL)")
+    plt.savefig("volume")
     plt.show()
     
 
@@ -403,6 +404,7 @@ def graph_data_temp():
     plt.plot(yGraph, [temperatures[_] for _ in range(-20,0)], linestyle = "--", marker = "o")
     plt.xlabel("Time (s)")
     plt.ylabel("tempertaure (degrees)")
+    plt.savefig("temperature")
     plt.show()
 
 
