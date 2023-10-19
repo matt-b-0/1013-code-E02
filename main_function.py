@@ -43,6 +43,7 @@ times = []
 board.set_pin_mode_analog_input(0) #thermistor pin
 originalTime = 0
 temperature=0
+temp_LED = False
 #variable pins and setup
 serLED = 9
 srclkLED = 10
@@ -97,7 +98,7 @@ def polling_loop():
 # Created by Matt
 # Date created: 11/10/2023
 def thermistor_read():
-    global originalTime, c1, c2, c3, R1, temperatures, times, temperature
+    global originalTime, c1, c2, c3, R1, temperatures, times, temperature, temp_LED
     board.set_pin_mode_analog_input(5)
     v0 = board.analog_read(5)[0]
 
@@ -113,6 +114,10 @@ def thermistor_read():
         if len(temperatures) > 1:
             change = temperature - temperatures[-2]
             print(f"Temperature Change: {change}")
+        if temperature > 25:
+            temp_LED = True
+        else:
+            temp_LED = False
 
 # reads light value using a light dependent resisitor, to determine if there are cracks in the tank
 # INPUTS: None 
@@ -122,8 +127,11 @@ def thermistor_read():
 def LDR_read():
     global LDR, luxLED, board
     lux = board.analog_read(LDR)[0]
+    print(f"lux is {lux}")
     if lux > 100:
         luxLED = True
+    
+        print("LDR LED on")
     else:
         False
 
@@ -159,15 +167,17 @@ def reactions():
     elif (volume/maxVolume)>1:
         print(f"Volume is beyond max volume {maxVolume} mL")
     
-    if temperature>25:
+    if temp_LED:
         responseReg[4] = 1
+        print("thermistor LED responce")
     else:
         responseReg[4] = 0
 
     if luxLED:
-        responseReg[5] = 1
+        responseReg[5] = 0
     else:
         responseReg[5] = 1
+        print("LUX LED responce")
     
     if (volume/maxVolume)>0.75 or (volume/maxVolume)<0.25:
         if changeCount >=5:
